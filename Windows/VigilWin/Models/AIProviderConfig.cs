@@ -2,9 +2,9 @@ namespace VigilWin.Models;
 
 public sealed class AIProviderConfig
 {
-    public string ProviderName { get; set; } = string.Empty;
+    public string ProviderName { get; set; } = "OpenAI Compatible";
 
-    public string Endpoint { get; set; } = string.Empty;
+    public string BaseUrl { get; set; } = "https://api.openai.com/v1";
 
     public string Model { get; set; } = string.Empty;
 

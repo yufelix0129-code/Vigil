@@ -1,14 +1,26 @@
-using VigilWin.Core;
-
 namespace VigilWin.Models;
 
 public sealed class FocusSession
 {
     public Guid Id { get; init; } = Guid.NewGuid();
 
-    public DateTimeOffset StartedAt { get; init; } = DateTimeOffset.Now;
+    public string Goal { get; set; } = string.Empty;
 
-    public DateTimeOffset? EndedAt { get; set; }
+    public DateTime StartTime { get; set; } = DateTime.Now;
 
-    public FocusStatus Status { get; set; } = FocusStatus.Focused;
+    public DateTime? EndTime { get; set; }
+
+    public int PlannedDurationSeconds { get; set; }
+
+    public int FocusedSeconds { get; set; }
+
+    public int WanderingSeconds { get; set; }
+
+    public int DistractedSeconds { get; set; }
+
+    public int IdleSeconds { get; set; }
+
+    public int DistractionCount { get; set; }
+
+    public string? Summary { get; set; }
 }

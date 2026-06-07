@@ -5,5 +5,6 @@ public enum FocusStatus
     Focused,
     Wandering,
     Distracted,
-    Idle
+    Idle,
+    Unknown
 }

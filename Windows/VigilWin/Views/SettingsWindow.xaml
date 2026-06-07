@@ -3,7 +3,111 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Settings"
         Width="640"
-        Height="480"
+        Height="600"
+        MinWidth="560"
+        MinHeight="520"
+        Background="#F4F6F8"
         WindowStartupLocation="CenterOwner">
-    <Grid />
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Border Margin="24"
+                Padding="28"
+                Background="White"
+                BorderBrush="#DDE2E7"
+                BorderThickness="1"
+                CornerRadius="8">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"
+                           Margin="0,0,0,22"
+                           FontSize="24"
+                           FontWeight="SemiBold"
+                           Text="设置" />
+
+                <StackPanel Grid.Row="1"
+                            Margin="0,0,0,14">
+                    <TextBlock Margin="0,0,0,6" Text="Provider Name" />
+                    <TextBox x:Name="ProviderNameTextBox" Height="34" Padding="8,5" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="2"
+                            Margin="0,0,0,14">
+                    <TextBlock Margin="0,0,0,6" Text="Base URL" />
+                    <TextBox x:Name="BaseUrlTextBox" Height="34" Padding="8,5" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="3"
+                            Margin="0,0,0,14">
+                    <TextBlock Margin="0,0,0,6" Text="API Key" />
+                    <PasswordBox x:Name="ApiKeyPasswordBox" Height="34" Padding="8,5" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="4"
+                            Margin="0,0,0,14">
+                    <TextBlock Margin="0,0,0,6" Text="Model" />
+                    <TextBox x:Name="ModelTextBox" Height="34" Padding="8,5" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="5"
+                            Margin="0,0,0,14">
+                    <TextBlock Margin="0,0,0,6" Text="Capture Interval Seconds" />
+                    <TextBox x:Name="CaptureIntervalTextBox" Height="34" Padding="8,5" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="6"
+                            Margin="0,0,0,16">
+                    <TextBlock Margin="0,0,0,6" Text="Idle Threshold Seconds" />
+                    <TextBox x:Name="IdleThresholdTextBox" Height="34" Padding="8,5" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="7"
+                            Margin="0,0,0,22">
+                    <CheckBox x:Name="EnableOverlayCheckBox"
+                              Margin="0,0,0,8"
+                              Content="Enable Overlay" />
+                    <CheckBox x:Name="SaveScreenshotsCheckBox"
+                              Content="Save Screenshots" />
+                </StackPanel>
+
+                <TextBlock Grid.Row="8"
+                           Margin="0,0,0,18"
+                           Foreground="#6B7280"
+                           Text="API Key 当前集中保存在 settings.json；后续应迁移到 Windows DPAPI 或 Credential Manager。"
+                           TextWrapping="Wrap" />
+
+                <StackPanel Grid.Row="9"
+                            HorizontalAlignment="Right"
+                            Orientation="Horizontal">
+                    <Button Width="110"
+                            Height="34"
+                            Margin="0,0,10,0"
+                            Click="TestButton_Click"
+                            Content="测试 AI 配置" />
+                    <Button Width="80"
+                            Height="34"
+                            Margin="0,0,10,0"
+                            Background="#2563EB"
+                            BorderBrush="#2563EB"
+                            Click="SaveButton_Click"
+                            Content="保存"
+                            Foreground="White" />
+                    <Button Width="80"
+                            Height="34"
+                            Click="CancelButton_Click"
+                            Content="取消" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </ScrollViewer>
 </Window>

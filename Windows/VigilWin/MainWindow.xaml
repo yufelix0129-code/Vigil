@@ -27,17 +27,33 @@
 
             <StackPanel>
                 <DockPanel Margin="0,0,0,32">
-                    <Button Width="72"
-                            Height="34"
-                            Margin="16,0,0,0"
-                            Padding="12,4"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Background="#F3F4F6"
-                            BorderBrush="#D1D5DB"
-                            Click="SettingsButton_Click"
-                            Content="设置"
-                            DockPanel.Dock="Right" />
+                    <StackPanel DockPanel.Dock="Right"
+                                Orientation="Horizontal">
+                        <Button Width="72"
+                                Height="34"
+                                Margin="10,0,0,0"
+                                Padding="12,4"
+                                Background="#F3F4F6"
+                                BorderBrush="#D1D5DB"
+                                Click="SettingsButton_Click"
+                                Content="设置" />
+                        <Button Width="72"
+                                Height="34"
+                                Margin="10,0,0,0"
+                                Padding="12,4"
+                                Background="#F3F4F6"
+                                BorderBrush="#D1D5DB"
+                                Click="HistoryButton_Click"
+                                Content="历史记录" />
+                        <Button Width="90"
+                                Height="34"
+                                Margin="10,0,0,0"
+                                Padding="12,4"
+                                Background="#F3F4F6"
+                                BorderBrush="#D1D5DB"
+                                Click="TestScreenshotButton_Click"
+                                Content="测试截屏" />
+                    </StackPanel>
 
                     <TextBlock VerticalAlignment="Center"
                                FontSize="28"
@@ -126,13 +142,21 @@
                                    FontWeight="SemiBold"
                                    Foreground="#1F2937"
                                    Text="当前状态：未开始" />
-                        <TextBlock Margin="0,0,0,8"
+                        <TextBlock x:Name="ElapsedTimeText"
+                                   Margin="0,0,0,8"
                                    FontSize="14"
                                    Foreground="#4B5563"
                                    Text="已专注时间：00:00" />
-                        <TextBlock FontSize="14"
+                        <TextBlock x:Name="DistractionCountText"
+                                   Margin="0,0,0,8"
+                                   FontSize="14"
                                    Foreground="#4B5563"
                                    Text="分心次数：0" />
+                        <TextBlock x:Name="LatestReasonText"
+                                   FontSize="14"
+                                   Foreground="#4B5563"
+                                   Text="AI 判断原因：暂无"
+                                   TextWrapping="Wrap" />
                     </StackPanel>
                 </Border>
             </StackPanel>

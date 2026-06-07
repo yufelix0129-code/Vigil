@@ -1,10 +1,59 @@
 <Window x:Class="VigilWin.Views.FloatingReminderWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Vigil Reminder"
-        Width="360"
+        Width="420"
         Height="160"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
         Topmost="True"
-        WindowStartupLocation="CenterScreen">
-    <Grid />
+        ShowInTaskbar="False"
+        WindowStyle="None">
+    <Border Margin="8"
+            Padding="18"
+            Background="White"
+            BorderBrush="#F59E0B"
+            BorderThickness="1"
+            CornerRadius="10">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="18"
+                              Direction="270"
+                              Opacity="0.18"
+                              ShadowDepth="4" />
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock FontSize="17"
+                       FontWeight="SemiBold"
+                       Foreground="#92400E"
+                       Text="你可能偏离了目标" />
+
+            <StackPanel Grid.Row="1"
+                        Margin="0,10,0,10">
+                <TextBlock x:Name="GoalText"
+                           Margin="0,0,0,4"
+                           Foreground="#1F2937"
+                           TextWrapping="Wrap" />
+                <TextBlock x:Name="ReasonText"
+                           Foreground="#4B5563"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Button Grid.Row="2"
+                    Width="96"
+                    Height="30"
+                    HorizontalAlignment="Right"
+                    Background="#2563EB"
+                    BorderBrush="#2563EB"
+                    Click="CloseButton_Click"
+                    Content="回到专注"
+                    Foreground="White" />
+        </Grid>
+    </Border>
 </Window>
