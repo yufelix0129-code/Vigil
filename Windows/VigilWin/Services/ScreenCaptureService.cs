@@ -11,6 +11,12 @@ public sealed class ScreenCaptureService
 {
     private const int MaxWidth = 1280;
     private const long JpegQuality = 70L;
+    private readonly LogService? _logService;
+
+    public ScreenCaptureService(LogService? logService = null)
+    {
+        _logService = logService;
+    }
 
     public Task<byte[]> CapturePrimaryScreenJpegAsync()
     {
@@ -38,10 +44,18 @@ public sealed class ScreenCaptureService
                 encoderParameters.Param[0] = new EncoderParameter(DrawingEncoder.Quality, JpegQuality);
                 outputBitmap.Save(stream, jpegCodec, encoderParameters);
 
-                return stream.ToArray();
+                var bytes = stream.ToArray();
+                if (bytes.Length == 0)
+                {
+                    throw new InvalidOperationException("截屏生成了空图片。");
+                }
+
+                _logService?.Info($"Screenshot captured successfully. bytes={bytes.Length}");
+                return bytes;
             }
             catch (Exception ex)
             {
+                _logService?.Error("Screenshot capture failed.", ex);
                 throw new InvalidOperationException($"截屏失败：{ex.Message}", ex);
             }
         });

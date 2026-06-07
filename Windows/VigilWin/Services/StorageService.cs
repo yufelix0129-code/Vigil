@@ -9,10 +9,12 @@ namespace VigilWin.Services;
 public sealed class StorageService
 {
     private readonly string _databasePath;
+    private readonly LogService? _logService;
     private bool _initialized;
 
-    public StorageService()
+    public StorageService(LogService? logService = null)
     {
+        _logService = logService;
         Directory.CreateDirectory(SettingsService.AppDataDirectory);
         _databasePath = Path.Combine(SettingsService.AppDataDirectory, "vigil.db");
     }
@@ -24,38 +26,47 @@ public sealed class StorageService
             return;
         }
 
-        await using var connection = CreateConnection();
-        await connection.OpenAsync();
+        try
+        {
+            await using var connection = CreateConnection();
+            await connection.OpenAsync();
 
-        await ExecuteNonQueryAsync(connection, """
-            CREATE TABLE IF NOT EXISTS FocusSessions (
-                Id TEXT PRIMARY KEY,
-                Goal TEXT NOT NULL,
-                StartTime TEXT NOT NULL,
-                EndTime TEXT NULL,
-                PlannedDurationSeconds INTEGER NOT NULL,
-                FocusedSeconds INTEGER NOT NULL,
-                WanderingSeconds INTEGER NOT NULL,
-                DistractedSeconds INTEGER NOT NULL,
-                IdleSeconds INTEGER NOT NULL,
-                DistractionCount INTEGER NOT NULL,
-                Summary TEXT NULL
-            );
-            """);
+            await ExecuteNonQueryAsync(connection, """
+                CREATE TABLE IF NOT EXISTS FocusSessions (
+                    Id TEXT PRIMARY KEY,
+                    Goal TEXT NOT NULL,
+                    StartTime TEXT NOT NULL,
+                    EndTime TEXT NULL,
+                    PlannedDurationSeconds INTEGER NOT NULL,
+                    FocusedSeconds INTEGER NOT NULL,
+                    WanderingSeconds INTEGER NOT NULL,
+                    DistractedSeconds INTEGER NOT NULL,
+                    IdleSeconds INTEGER NOT NULL,
+                    DistractionCount INTEGER NOT NULL,
+                    Summary TEXT NULL
+                );
+                """);
 
-        await ExecuteNonQueryAsync(connection, """
-            CREATE TABLE IF NOT EXISTS FrameRecords (
-                Id TEXT PRIMARY KEY,
-                SessionId TEXT NOT NULL,
-                Timestamp TEXT NOT NULL,
-                Status TEXT NOT NULL,
-                Confidence REAL NOT NULL,
-                Reason TEXT NOT NULL,
-                ScreenshotPath TEXT NULL
-            );
-            """);
+            await ExecuteNonQueryAsync(connection, """
+                CREATE TABLE IF NOT EXISTS FrameRecords (
+                    Id TEXT PRIMARY KEY,
+                    SessionId TEXT NOT NULL,
+                    Timestamp TEXT NOT NULL,
+                    Status TEXT NOT NULL,
+                    Confidence REAL NOT NULL,
+                    Reason TEXT NOT NULL,
+                    ScreenshotPath TEXT NULL
+                );
+                """);
 
-        _initialized = true;
+            _initialized = true;
+            _logService?.Info("SQLite initialized successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logService?.Error("SQLite initialization failed.", ex);
+            throw;
+        }
     }
 
     public async Task CreateSessionAsync(FocusSession session)
@@ -79,6 +90,7 @@ public sealed class StorageService
             """;
         AddSessionParameters(command, session);
         await command.ExecuteNonQueryAsync();
+        _logService?.Info($"Session created. id={session.Id}");
     }
 
     public async Task UpdateSessionAsync(FocusSession session)
@@ -104,6 +116,7 @@ public sealed class StorageService
             """;
         AddSessionParameters(command, session);
         await command.ExecuteNonQueryAsync();
+        _logService?.Info($"Session updated. id={session.Id}");
     }
 
     public async Task AddFrameRecordAsync(FrameRecord record)
@@ -130,6 +143,7 @@ public sealed class StorageService
         command.Parameters.AddWithValue("$screenshotPath", (object?)record.ScreenshotPath ?? DBNull.Value);
 
         await command.ExecuteNonQueryAsync();
+        _logService?.Info($"Frame record added. sessionId={record.SessionId} status={record.Status}");
     }
 
     public async Task<List<FocusSession>> GetRecentSessionsAsync(int limit = 20)
@@ -156,6 +170,7 @@ public sealed class StorageService
             sessions.Add(ReadSession(reader));
         }
 
+        _logService?.Info($"Recent sessions loaded. count={sessions.Count}");
         return sessions;
     }
 
@@ -181,6 +196,7 @@ public sealed class StorageService
             records.Add(ReadFrameRecord(reader));
         }
 
+        _logService?.Info($"Frame records loaded. sessionId={sessionId} count={records.Count}");
         return records;
     }
 

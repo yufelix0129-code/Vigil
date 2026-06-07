@@ -15,6 +15,8 @@ public sealed class FocusSessionManager
     private readonly OverlayService _overlayService;
     private readonly FrameAnalyzer _frameAnalyzer;
     private readonly SemaphoreSlim _lifecycleLock = new(1, 1);
+    private readonly SemaphoreSlim _tickLock = new(1, 1);
+    private readonly LogService? _logService;
 
     private CancellationTokenSource? _sessionCancellation;
     private Task? _sessionTask;
@@ -29,7 +31,8 @@ public sealed class FocusSessionManager
         SettingsService settingsService,
         NotificationService notificationService,
         OverlayService overlayService,
-        FrameAnalyzer frameAnalyzer)
+        FrameAnalyzer frameAnalyzer,
+        LogService? logService = null)
     {
         _screenCaptureService = screenCaptureService;
         _aiService = aiService;
@@ -39,6 +42,7 @@ public sealed class FocusSessionManager
         _notificationService = notificationService;
         _overlayService = overlayService;
         _frameAnalyzer = frameAnalyzer;
+        _logService = logService;
     }
 
     public event EventHandler<SessionState>? StateChanged;
@@ -60,6 +64,7 @@ public sealed class FocusSessionManager
         {
             if (_currentSession is not null && _currentSession.EndTime is null)
             {
+                _logService?.Warn("StartSessionAsync ignored because a session is already running.");
                 throw new InvalidOperationException("已有专注会话正在运行。");
             }
 
@@ -78,6 +83,7 @@ public sealed class FocusSessionManager
             _sessionCancellation = new CancellationTokenSource();
             SetState(SessionState.Running);
             TickUpdated?.Invoke(this, session);
+            _logService?.Info($"Session started. id={session.Id} durationSeconds={session.PlannedDurationSeconds}");
 
             _sessionTask = Task.Run(() => RunSessionLoopAsync(session, _sessionCancellation.Token));
         }
@@ -100,6 +106,7 @@ public sealed class FocusSessionManager
             cancellation = _sessionCancellation;
             sessionTask = _sessionTask;
             cancellation?.Cancel();
+            _logService?.Info(sessionToEnd is null ? "StopSessionAsync called without active session." : $"Stop requested. sessionId={sessionToEnd.Id}");
         }
         finally
         {
@@ -161,94 +168,117 @@ public sealed class FocusSessionManager
 
     private async Task HandleTickAsync(FocusSession session, int intervalSeconds, CancellationToken cancellationToken)
     {
-        var settings = _settingsService.Load();
-        var threshold = TimeSpan.FromSeconds(Math.Max(5, settings.IdleThresholdSeconds));
-
-        if (_idleDetectorService.IsIdle(threshold))
+        if (!await _tickLock.WaitAsync(0, cancellationToken))
         {
-            var idleRecord = new FrameRecord
-            {
-                SessionId = session.Id,
-                Timestamp = DateTime.Now,
-                Status = FocusStatus.Idle,
-                Confidence = 1,
-                Reason = $"用户空闲超过 {threshold.TotalSeconds:0} 秒"
-            };
-
-            await SaveRecordAndUpdateSessionAsync(session, idleRecord, intervalSeconds);
+            _logService?.Warn("Skipped tick because previous tick is still running.");
             return;
         }
-
-        byte[]? screenshot = null;
-        string? screenshotPath = null;
 
         try
         {
-            SetState(SessionState.Analyzing);
-            screenshot = await _screenCaptureService.CapturePrimaryScreenJpegAsync();
+            cancellationToken.ThrowIfCancellationRequested();
+            var settings = _settingsService.Load();
+            var threshold = TimeSpan.FromSeconds(Math.Max(1, settings.IdleThresholdSeconds));
 
-            if (settings.SaveScreenshots)
+            if (_idleDetectorService.IsIdle(threshold))
             {
-                screenshotPath = await SaveScreenshotAsync(session.Id, screenshot, cancellationToken);
+                var idleRecord = new FrameRecord
+                {
+                    SessionId = session.Id,
+                    Timestamp = DateTime.Now,
+                    Status = FocusStatus.Idle,
+                    Confidence = 1,
+                    Reason = $"用户空闲超过 {threshold.TotalSeconds:0} 秒"
+                };
+
+                _logService?.Info($"Tick recorded idle. sessionId={session.Id}");
+                await SaveRecordAndUpdateSessionAsync(session, idleRecord, intervalSeconds);
+                return;
             }
-        }
-        catch (Exception ex)
-        {
-            OnError(ex.Message);
-            var captureFailureRecord = new FrameRecord
+
+            byte[] screenshot;
+            string? screenshotPath = null;
+
+            try
+            {
+                SetState(SessionState.Analyzing);
+                screenshot = await _screenCaptureService.CapturePrimaryScreenJpegAsync();
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (settings.SaveScreenshots)
+                {
+                    screenshotPath = await SaveScreenshotAsync(session.Id, screenshot, cancellationToken);
+                    _logService?.Info($"Screenshot saved for session. sessionId={session.Id}");
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                OnError(ex.Message);
+                var captureFailureRecord = new FrameRecord
+                {
+                    SessionId = session.Id,
+                    Timestamp = DateTime.Now,
+                    Status = FocusStatus.Unknown,
+                    Confidence = 0,
+                    Reason = ex.Message
+                };
+                await SaveRecordAndUpdateSessionAsync(session, captureFailureRecord, intervalSeconds);
+                SetState(SessionState.Running);
+                return;
+            }
+
+            AIAnalysisResult result;
+            if (!_frameAnalyzer.ShouldAnalyze(screenshot))
+            {
+                result = new AIAnalysisResult
+                {
+                    Status = FocusStatus.Unknown,
+                    Confidence = 0,
+                    Reason = "截图未发生明显变化，跳过 AI 分析"
+                };
+            }
+            else
+            {
+                result = await _aiService.AnalyzeScreenshotAsync(
+                    session.Goal,
+                    screenshot,
+                    settings.AIProvider,
+                    cancellationToken);
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var analysisRecord = new FrameRecord
             {
                 SessionId = session.Id,
                 Timestamp = DateTime.Now,
-                Status = FocusStatus.Unknown,
-                Confidence = 0,
-                Reason = ex.Message
+                Status = result.Status,
+                Confidence = result.Confidence,
+                Reason = result.Reason,
+                ScreenshotPath = screenshotPath
             };
-            await SaveRecordAndUpdateSessionAsync(session, captureFailureRecord, intervalSeconds);
-            SetState(SessionState.Running);
-            return;
-        }
 
-        AIAnalysisResult result;
-        if (!_frameAnalyzer.ShouldAnalyze(screenshot))
-        {
-            result = new AIAnalysisResult
+            await SaveRecordAndUpdateSessionAsync(session, analysisRecord, intervalSeconds);
+
+            if (analysisRecord.Status == FocusStatus.Distracted)
             {
-                Status = FocusStatus.Unknown,
-                Confidence = 0,
-                Reason = "截图未发生明显变化，跳过 AI 分析"
-            };
-        }
-        else
-        {
-            result = await _aiService.AnalyzeScreenshotAsync(
-                session.Goal,
-                screenshot,
-                settings.AIProvider,
-                cancellationToken);
-        }
-
-        var analysisRecord = new FrameRecord
-        {
-            SessionId = session.Id,
-            Timestamp = DateTime.Now,
-            Status = result.Status,
-            Confidence = result.Confidence,
-            Reason = result.Reason,
-            ScreenshotPath = screenshotPath
-        };
-
-        await SaveRecordAndUpdateSessionAsync(session, analysisRecord, intervalSeconds);
-
-        if (analysisRecord.Status == FocusStatus.Distracted)
-        {
-            _notificationService.ShowDistractedNotification(session.Goal, analysisRecord.Reason);
-            if (settings.EnableOverlay)
-            {
-                _overlayService.ShowDistractedOverlay(session.Goal, analysisRecord.Reason);
+                _notificationService.ShowDistractedNotification(session.Goal, analysisRecord.Reason);
+                if (settings.EnableOverlay)
+                {
+                    _overlayService.ShowDistractedOverlay(session.Goal, analysisRecord.Reason);
+                }
             }
-        }
 
-        SetState(SessionState.Running);
+            SetState(SessionState.Running);
+        }
+        finally
+        {
+            _tickLock.Release();
+        }
     }
 
     private async Task SaveRecordAndUpdateSessionAsync(FocusSession session, FrameRecord record, int intervalSeconds)
@@ -303,6 +333,7 @@ public sealed class FocusSessionManager
         }
 
         await _storageService.UpdateSessionAsync(session);
+        _logService?.Info($"Session ended. id={session.Id} state={finalState} distractions={session.DistractionCount}");
         SessionCompleted?.Invoke(this, session);
         TickUpdated?.Invoke(this, session);
 
@@ -362,6 +393,7 @@ public sealed class FocusSessionManager
 
     private void OnError(string message)
     {
+        _logService?.Warn(message);
         ErrorOccurred?.Invoke(this, message);
     }
 

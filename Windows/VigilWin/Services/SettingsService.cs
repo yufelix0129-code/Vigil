@@ -1,4 +1,5 @@
 using System.IO;
+using System.Security.Cryptography;
 using System.Text.Json;
 using VigilWin.Models;
 
@@ -6,14 +7,36 @@ namespace VigilWin.Services;
 
 public sealed class SettingsService
 {
+    private readonly SecureSecretService _secureSecretService;
+    private readonly LogService? _logService;
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
         WriteIndented = true
     };
 
-    public static string AppDataDirectory =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VigilWin");
+    public SettingsService()
+        : this(new SecureSecretService(), null)
+    {
+    }
+
+    public SettingsService(SecureSecretService secureSecretService, LogService? logService = null)
+    {
+        _secureSecretService = secureSecretService;
+        _logService = logService;
+    }
+
+    public static string AppDataDirectory
+    {
+        get
+        {
+            var overridePath = Environment.GetEnvironmentVariable("VIGILWIN_APPDATA");
+            return string.IsNullOrWhiteSpace(overridePath)
+                ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VigilWin")
+                : overridePath;
+        }
+    }
 
     public static string SettingsPath => Path.Combine(AppDataDirectory, "settings.json");
 
@@ -27,6 +50,7 @@ public sealed class SettingsService
         {
             var defaultSettings = CreateDefaultSettings();
             Save(defaultSettings);
+            _logService?.Info("Settings file not found; created default settings.");
             return defaultSettings;
         }
 
@@ -34,7 +58,10 @@ public sealed class SettingsService
         {
             var json = File.ReadAllText(SettingsPath);
             var settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? CreateDefaultSettings();
+            MigrateLegacyPlainTextApiKey(settings, json);
             Normalize(settings);
+            DecryptApiKey(settings);
+            _logService?.Info("Settings loaded successfully.");
             return settings;
         }
         catch (JsonException)
@@ -44,7 +71,13 @@ public sealed class SettingsService
 
             var defaultSettings = CreateDefaultSettings();
             Save(defaultSettings);
+            _logService?.Warn($"Settings JSON was invalid; backed up and recreated settings at {backupPath}.");
             return defaultSettings;
+        }
+        catch (Exception ex)
+        {
+            _logService?.Error("Settings load failed.", ex);
+            throw;
         }
     }
 
@@ -53,9 +86,16 @@ public sealed class SettingsService
         Directory.CreateDirectory(AppDataDirectory);
         Normalize(settings);
 
-        // TODO: Move ApiKey storage to Windows DPAPI or Credential Manager before shipping.
+        if (!string.IsNullOrWhiteSpace(settings.AIProvider.ApiKey))
+        {
+            settings.AIProvider.EncryptedApiKey = _secureSecretService.Protect(settings.AIProvider.ApiKey);
+        }
+
+        settings.AIProvider.ApiKeyError = null;
+
         var json = JsonSerializer.Serialize(settings, JsonOptions);
         File.WriteAllText(SettingsPath, json);
+        _logService?.Info("Settings saved successfully.");
     }
 
     private static AppSettings CreateDefaultSettings()
@@ -76,8 +116,67 @@ public sealed class SettingsService
             ? "gpt-4o-mini"
             : settings.AIProvider.Model.Trim();
         settings.AIProvider.ApiKey ??= string.Empty;
+        settings.AIProvider.EncryptedApiKey ??= string.Empty;
 
         settings.CaptureIntervalSeconds = Math.Max(1, settings.CaptureIntervalSeconds);
-        settings.IdleThresholdSeconds = Math.Max(5, settings.IdleThresholdSeconds);
+        settings.IdleThresholdSeconds = Math.Max(1, settings.IdleThresholdSeconds);
+    }
+
+    private void DecryptApiKey(AppSettings settings)
+    {
+        if (!_secureSecretService.HasSecret(settings.AIProvider.EncryptedApiKey))
+        {
+            settings.AIProvider.ApiKey = string.Empty;
+            settings.AIProvider.ApiKeyError = null;
+            return;
+        }
+
+        try
+        {
+            settings.AIProvider.ApiKey = _secureSecretService.Unprotect(settings.AIProvider.EncryptedApiKey);
+            settings.AIProvider.ApiKeyError = null;
+        }
+        catch (Exception ex) when (ex is CryptographicException or FormatException)
+        {
+            settings.AIProvider.ApiKey = string.Empty;
+            settings.AIProvider.ApiKeyError = "API Key 解密失败，请重新填写";
+            _logService?.Warn("API key decrypt failed; user must re-enter it.");
+        }
+    }
+
+    private void MigrateLegacyPlainTextApiKey(AppSettings settings, string json)
+    {
+        if (!string.IsNullOrWhiteSpace(settings.AIProvider.EncryptedApiKey))
+        {
+            return;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            if (!document.RootElement.TryGetProperty("AIProvider", out var provider))
+            {
+                return;
+            }
+
+            if (!provider.TryGetProperty("ApiKey", out var legacyApiKeyElement))
+            {
+                return;
+            }
+
+            var legacyApiKey = legacyApiKeyElement.GetString();
+            if (string.IsNullOrWhiteSpace(legacyApiKey))
+            {
+                return;
+            }
+
+            settings.AIProvider.EncryptedApiKey = _secureSecretService.Protect(legacyApiKey);
+            Save(settings);
+            _logService?.Info("Migrated legacy plaintext API key to DPAPI-protected storage.");
+        }
+        catch (Exception ex)
+        {
+            _logService?.Warn($"Legacy API key migration skipped: {ex.Message}");
+        }
     }
 }

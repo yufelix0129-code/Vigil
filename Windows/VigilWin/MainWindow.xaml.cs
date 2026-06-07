@@ -16,18 +16,22 @@ public partial class MainWindow : Window
     private readonly StorageService _storageService;
     private readonly ScreenCaptureService _screenCaptureService;
     private readonly FocusSessionManager _sessionManager;
+    private readonly LogService _logService;
 
     public MainWindow()
     {
         InitializeComponent();
 
-        _settingsService = new SettingsService();
-        _storageService = new StorageService();
-        _screenCaptureService = new ScreenCaptureService();
-        var aiService = new AIService();
+        _logService = new LogService();
+        _logService.Info("App starting.");
+        var secureSecretService = new SecureSecretService();
+        _settingsService = new SettingsService(secureSecretService, _logService);
+        _storageService = new StorageService(_logService);
+        _screenCaptureService = new ScreenCaptureService(_logService);
+        var aiService = new AIService(_logService);
         var idleDetectorService = new IdleDetectorService();
-        var notificationService = new NotificationService();
-        var overlayService = new OverlayService();
+        var notificationService = new NotificationService(_logService);
+        var overlayService = new OverlayService(_logService);
         var frameAnalyzer = new FrameAnalyzer();
 
         _sessionManager = new FocusSessionManager(
@@ -38,7 +42,8 @@ public partial class MainWindow : Window
             _settingsService,
             notificationService,
             overlayService,
-            frameAnalyzer);
+            frameAnalyzer,
+            _logService);
 
         _sessionManager.StateChanged += SessionManager_StateChanged;
         _sessionManager.TickUpdated += SessionManager_TickUpdated;
@@ -100,7 +105,7 @@ public partial class MainWindow : Window
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
-        var settingsWindow = new SettingsWindow(_settingsService)
+        var settingsWindow = new SettingsWindow(_settingsService, _logService)
         {
             Owner = this
         };
@@ -110,7 +115,7 @@ public partial class MainWindow : Window
 
     private void HistoryButton_Click(object sender, RoutedEventArgs e)
     {
-        var historyWindow = new HistoryWindow(_storageService)
+        var historyWindow = new HistoryWindow(_storageService, _logService)
         {
             Owner = this
         };
@@ -126,11 +131,13 @@ public partial class MainWindow : Window
             Directory.CreateDirectory(SettingsService.AppDataDirectory);
             var path = Path.Combine(SettingsService.AppDataDirectory, "test-screenshot.jpg");
             await File.WriteAllBytesAsync(path, screenshot);
+            _logService.Info($"Test screenshot saved. path={path}");
 
             MessageBox.Show($"测试截屏已保存：\n{path}", "Vigil", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
+            _logService.Error("Test screenshot failed.", ex);
             LatestReasonText.Text = $"AI 判断原因：截屏失败：{ex.Message}";
             MessageBox.Show($"测试截屏失败：{ex.Message}", "Vigil", MessageBoxButton.OK, MessageBoxImage.Error);
         }
@@ -142,9 +149,11 @@ public partial class MainWindow : Window
         {
             _settingsService.Load();
             await _storageService.InitializeAsync();
+            _logService.Info("MainWindow loaded.");
         }
         catch (Exception ex)
         {
+            _logService.Error("App initialization failed.", ex);
             MessageBox.Show($"初始化本地数据失败：{ex.Message}", "Vigil", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }

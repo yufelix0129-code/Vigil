@@ -9,10 +9,16 @@ namespace VigilWin.Services;
 
 public sealed class AIService
 {
+    private readonly LogService? _logService;
     private readonly HttpClient _httpClient = new()
     {
-        Timeout = TimeSpan.FromSeconds(60)
+        Timeout = TimeSpan.FromSeconds(30)
     };
+
+    public AIService(LogService? logService = null)
+    {
+        _logService = logService;
+    }
 
     public async Task<AIAnalysisResult> AnalyzeScreenshotAsync(
         string goal,
@@ -25,6 +31,7 @@ public sealed class AIService
 
         if (!IsConfigured(config))
         {
+            _logService?.Warn("AI analysis skipped because provider config is incomplete.");
             return new AIAnalysisResult
             {
                 Status = FocusStatus.Unknown,
@@ -35,6 +42,7 @@ public sealed class AIService
 
         try
         {
+            _logService?.Info($"AI analysis request started. model={config.Model}");
             var imageBase64 = Convert.ToBase64String(screenshotJpeg);
             var payload = new
             {
@@ -72,6 +80,7 @@ public sealed class AIService
 
             if (!response.IsSuccessStatusCode)
             {
+                _logService?.Warn($"AI analysis request failed. statusCode={(int)response.StatusCode}");
                 return new AIAnalysisResult
                 {
                     Status = FocusStatus.Unknown,
@@ -81,14 +90,18 @@ public sealed class AIService
             }
 
             var content = ExtractMessageContent(responseBody);
-            return ParseAnalysisResult(content);
+            var result = ParseAnalysisResult(content);
+            _logService?.Info($"AI analysis returned status={result.Status} confidence={result.Confidence:0.00}");
+            return result;
         }
         catch (OperationCanceledException)
         {
+            _logService?.Warn("AI analysis request cancelled.");
             throw;
         }
         catch (Exception ex)
         {
+            _logService?.Error("AI analysis failed.", ex);
             return new AIAnalysisResult
             {
                 Status = FocusStatus.Unknown,
@@ -106,11 +119,13 @@ public sealed class AIService
     {
         if (!IsConfigured(config))
         {
+            _logService?.Warn("AI summary skipped because provider config is incomplete.");
             return SummaryService.BuildLocalSummary(session, records);
         }
 
         try
         {
+            _logService?.Info($"AI summary request started. sessionId={session.Id} model={config.Model}");
             var payload = new
             {
                 model = config.Model,
@@ -132,6 +147,7 @@ public sealed class AIService
 
             if (!response.IsSuccessStatusCode)
             {
+                _logService?.Warn($"AI summary request failed. statusCode={(int)response.StatusCode}");
                 return SummaryService.BuildLocalSummary(session, records);
             }
 
@@ -140,8 +156,9 @@ public sealed class AIService
                 ? SummaryService.BuildLocalSummary(session, records)
                 : content.Trim();
         }
-        catch
+        catch (Exception ex)
         {
+            _logService?.Error("AI summary failed.", ex);
             return SummaryService.BuildLocalSummary(session, records);
         }
     }
@@ -209,7 +226,7 @@ public sealed class AIService
             {
                 Status = FocusStatus.Unknown,
                 Confidence = 0,
-                Reason = "AI 返回格式不是 JSON"
+                Reason = "AI 返回格式无法解析"
             };
         }
 
@@ -240,7 +257,7 @@ public sealed class AIService
             {
                 Status = FocusStatus.Unknown,
                 Confidence = 0,
-                Reason = "AI 返回 JSON 解析失败"
+                Reason = "AI 返回格式无法解析"
             };
         }
     }
@@ -258,13 +275,57 @@ public sealed class AIService
         }
 
         var start = trimmed.IndexOf('{');
-        var end = trimmed.LastIndexOf('}');
-        if (start < 0 || end < start)
+        if (start < 0)
         {
             return null;
         }
 
-        return trimmed[start..(end + 1)];
+        var depth = 0;
+        var inString = false;
+        var escaped = false;
+
+        for (var index = start; index < trimmed.Length; index++)
+        {
+            var ch = trimmed[index];
+
+            if (escaped)
+            {
+                escaped = false;
+                continue;
+            }
+
+            if (ch == '\\' && inString)
+            {
+                escaped = true;
+                continue;
+            }
+
+            if (ch == '"')
+            {
+                inString = !inString;
+                continue;
+            }
+
+            if (inString)
+            {
+                continue;
+            }
+
+            if (ch == '{')
+            {
+                depth++;
+            }
+            else if (ch == '}')
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    return trimmed[start..(index + 1)];
+                }
+            }
+        }
+
+        return null;
     }
 
     private static FocusStatus ParseStatus(string? statusText)

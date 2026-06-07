@@ -51,6 +51,10 @@
                             Margin="0,0,0,14">
                     <TextBlock Margin="0,0,0,6" Text="API Key" />
                     <PasswordBox x:Name="ApiKeyPasswordBox" Height="34" Padding="8,5" />
+                    <TextBlock x:Name="ApiKeyStatusText"
+                               Margin="0,6,0,0"
+                               Foreground="#6B7280"
+                               TextWrapping="Wrap" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="4"
@@ -83,7 +87,7 @@
                 <TextBlock Grid.Row="8"
                            Margin="0,0,0,18"
                            Foreground="#6B7280"
-                           Text="API Key 当前集中保存在 settings.json；后续应迁移到 Windows DPAPI 或 Credential Manager。"
+                           Text="API Key 使用 Windows 当前用户 DPAPI 加密保存；重新输入会覆盖已保存的 Key。"
                            TextWrapping="Wrap" />
 
                 <StackPanel Grid.Row="9"

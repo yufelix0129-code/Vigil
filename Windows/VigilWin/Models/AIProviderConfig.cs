@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace VigilWin.Models;
 
 public sealed class AIProviderConfig
@@ -8,5 +10,11 @@ public sealed class AIProviderConfig
 
     public string Model { get; set; } = string.Empty;
 
+    public string EncryptedApiKey { get; set; } = string.Empty;
+
+    [JsonIgnore]
     public string ApiKey { get; set; } = string.Empty;
+
+    [JsonIgnore]
+    public string? ApiKeyError { get; set; }
 }
