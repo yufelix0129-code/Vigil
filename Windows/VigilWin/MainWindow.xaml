@@ -1,14 +1,141 @@
 <Window x:Class="VigilWin.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Vigil"
-        Width="900"
-        Height="600"
+        Title="Vigil for Windows"
+        Width="760"
+        Height="620"
+        MinWidth="680"
+        MinHeight="560"
+        Background="#F4F6F8"
         WindowStartupLocation="CenterScreen">
     <Grid>
-        <TextBlock HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   FontSize="28"
-                   Text="Vigil for Windows" />
+        <Border Width="560"
+                Margin="32"
+                Padding="40"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="White"
+                BorderBrush="#DDE2E7"
+                BorderThickness="1"
+                CornerRadius="10">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="18"
+                                  Direction="270"
+                                  Opacity="0.08"
+                                  ShadowDepth="4" />
+            </Border.Effect>
+
+            <StackPanel>
+                <DockPanel Margin="0,0,0,32">
+                    <Button Width="72"
+                            Height="34"
+                            Margin="16,0,0,0"
+                            Padding="12,4"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Background="#F3F4F6"
+                            BorderBrush="#D1D5DB"
+                            Click="SettingsButton_Click"
+                            Content="设置"
+                            DockPanel.Dock="Right" />
+
+                    <TextBlock VerticalAlignment="Center"
+                               FontSize="28"
+                               FontWeight="SemiBold"
+                               Foreground="#1F2937"
+                               Text="Vigil for Windows" />
+                </DockPanel>
+
+                <TextBlock Margin="0,0,0,8"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           Foreground="#374151"
+                           Text="本次专注目标" />
+
+                <Grid Margin="0,0,0,22">
+                    <TextBox x:Name="FocusGoalTextBox"
+                             Height="42"
+                             Padding="12,9"
+                             VerticalContentAlignment="Center"
+                             BorderBrush="#C7CDD4"
+                             BorderThickness="1"
+                             FontSize="14"
+                             TextChanged="FocusGoalTextBox_TextChanged" />
+                    <TextBlock x:Name="FocusGoalPlaceholder"
+                               Margin="13,0,0,0"
+                               VerticalAlignment="Center"
+                               Foreground="#8A94A3"
+                               IsHitTestVisible="False"
+                               Text="请输入本次专注目标，例如：复习化学方程式" />
+                </Grid>
+
+                <TextBlock Margin="0,0,0,8"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           Foreground="#374151"
+                           Text="专注时长" />
+
+                <ComboBox x:Name="DurationComboBox"
+                          Height="40"
+                          Margin="0,0,0,28"
+                          Padding="10,5"
+                          SelectedIndex="1">
+                    <ComboBoxItem Content="15 分钟" />
+                    <ComboBoxItem Content="25 分钟" />
+                    <ComboBoxItem Content="45 分钟" />
+                    <ComboBoxItem Content="60 分钟" />
+                </ComboBox>
+
+                <Grid Margin="0,0,0,28">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button Grid.Column="0"
+                            Height="42"
+                            Background="#2563EB"
+                            BorderBrush="#2563EB"
+                            Click="StartFocusButton_Click"
+                            Content="开始专注"
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Foreground="White" />
+
+                    <Button Grid.Column="2"
+                            Height="42"
+                            Background="White"
+                            BorderBrush="#9CA3AF"
+                            Click="StopFocusButton_Click"
+                            Content="停止专注"
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Foreground="#374151" />
+                </Grid>
+
+                <Border Padding="20"
+                        Background="#F8FAFC"
+                        BorderBrush="#E5E7EB"
+                        BorderThickness="1"
+                        CornerRadius="6">
+                    <StackPanel>
+                        <TextBlock x:Name="CurrentStatusText"
+                                   Margin="0,0,0,12"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="#1F2937"
+                                   Text="当前状态：未开始" />
+                        <TextBlock Margin="0,0,0,8"
+                                   FontSize="14"
+                                   Foreground="#4B5563"
+                                   Text="已专注时间：00:00" />
+                        <TextBlock FontSize="14"
+                                   Foreground="#4B5563"
+                                   Text="分心次数：0" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>
