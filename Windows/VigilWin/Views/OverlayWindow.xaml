@@ -1,0 +1,9 @@
+<Window x:Class="VigilWin.Views.OverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Vigil Overlay"
+        Width="480"
+        Height="240"
+        WindowStartupLocation="CenterScreen">
+    <Grid />
+</Window>

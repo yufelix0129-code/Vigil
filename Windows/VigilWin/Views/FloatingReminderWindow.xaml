@@ -1,0 +1,10 @@
+<Window x:Class="VigilWin.Views.FloatingReminderWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Vigil Reminder"
+        Width="360"
+        Height="160"
+        Topmost="True"
+        WindowStartupLocation="CenterScreen">
+    <Grid />
+</Window>
