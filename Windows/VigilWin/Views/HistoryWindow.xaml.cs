@@ -25,7 +25,13 @@ public partial class HistoryWindow : Window
         {
             var sessions = await _storageService.GetRecentSessionsAsync(20);
             SessionListBox.ItemsSource = sessions;
-            DetailGoalText.Text = sessions.Count == 0 ? "暂无历史记录" : "请选择一条记录";
+            SessionListBox.Visibility = sessions.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+            EmptySessionsText.Visibility = sessions.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            EmptyDetailsText.Text = sessions.Count == 0
+                ? "Start a focus session to see details here."
+                : "Select a session to see details.";
+            EmptyDetailsText.Visibility = Visibility.Visible;
+            DetailsContentPanel.Visibility = Visibility.Collapsed;
             _logService?.Info($"History sessions loaded. count={sessions.Count}");
         }
         catch (Exception ex)
@@ -44,17 +50,19 @@ public partial class HistoryWindow : Window
 
         DetailGoalText.Text = session.Goal;
         var actualDuration = ((session.EndTime ?? DateTime.Now) - session.StartTime).TotalMinutes;
-        var endTimeText = session.EndTime.HasValue ? session.EndTime.Value.ToString("g") : "未结束";
+        var endTimeText = session.EndTime.HasValue ? session.EndTime.Value.ToString("g") : "Not ended";
         DetailStatsText.Text =
-            $"开始：{session.StartTime:g}\n" +
-            $"结束：{endTimeText}\n" +
-            $"计划时长：{TimeSpan.FromSeconds(session.PlannedDurationSeconds):hh\\:mm\\:ss}\n" +
-            $"时长：{actualDuration:0.0} 分钟\n" +
-            $"Focused：{session.FocusedSeconds} 秒；Wandering：{session.WanderingSeconds} 秒；Distracted：{session.DistractedSeconds} 秒；Idle：{session.IdleSeconds} 秒\n" +
-            $"分心次数：{session.DistractionCount}";
+            $"Started: {session.StartTime:g}\n" +
+            $"Ended: {endTimeText}\n" +
+            $"Planned: {TimeSpan.FromSeconds(session.PlannedDurationSeconds):hh\\:mm\\:ss}\n" +
+            $"Duration: {actualDuration:0.0} minutes\n" +
+            $"Focused: {session.FocusedSeconds}s; Wandering: {session.WanderingSeconds}s; Distracted: {session.DistractedSeconds}s; Idle: {session.IdleSeconds}s\n" +
+            $"Distractions: {session.DistractionCount}";
         DetailSummaryText.Text = string.IsNullOrWhiteSpace(session.Summary)
-            ? "暂无总结。"
+            ? "No summary yet."
             : session.Summary;
+        EmptyDetailsText.Visibility = Visibility.Collapsed;
+        DetailsContentPanel.Visibility = Visibility.Visible;
 
         try
         {

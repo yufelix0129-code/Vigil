@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using VigilWin.Core;
 using VigilWin.Models;
 using VigilWin.Services;
@@ -12,6 +13,12 @@ namespace VigilWin;
 
 public partial class MainWindow : Window
 {
+    private static readonly System.Windows.Media.Brush NeutralStatusBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(166, 175, 189));
+    private static readonly System.Windows.Media.Brush RunningStatusBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(35, 169, 130));
+    private static readonly System.Windows.Media.Brush AnalyzingStatusBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(109, 106, 242));
+    private static readonly System.Windows.Media.Brush WarningStatusBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 158, 11));
+    private static readonly System.Windows.Media.Brush DangerStatusBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(239, 98, 98));
+
     private readonly SettingsService _settingsService;
     private readonly StorageService _storageService;
     private readonly ScreenCaptureService _screenCaptureService;
@@ -95,7 +102,8 @@ public partial class MainWindow : Window
         try
         {
             await _sessionManager.StopSessionAsync();
-            CurrentStatusText.Text = "当前状态：已停止";
+            CurrentStatusText.Text = "Stopped";
+            UpdateStatusDot(SessionState.Cancelled);
         }
         catch (Exception ex)
         {
@@ -167,7 +175,8 @@ public partial class MainWindow : Window
     {
         Dispatcher.BeginInvoke(() =>
         {
-            CurrentStatusText.Text = $"当前状态：{FormatState(state)}";
+            CurrentStatusText.Text = FormatState(state);
+            UpdateStatusDot(state);
         });
     }
 
@@ -176,8 +185,8 @@ public partial class MainWindow : Window
         Dispatcher.BeginInvoke(() =>
         {
             var elapsed = (session.EndTime ?? DateTime.Now) - session.StartTime;
-            ElapsedTimeText.Text = $"已专注时间：{FormatElapsed(elapsed)}";
-            DistractionCountText.Text = $"分心次数：{session.DistractionCount}";
+            ElapsedTimeText.Text = FormatElapsed(elapsed);
+            DistractionCountText.Text = session.DistractionCount.ToString();
         });
     }
 
@@ -185,7 +194,8 @@ public partial class MainWindow : Window
     {
         Dispatcher.BeginInvoke(() =>
         {
-            LatestReasonText.Text = $"AI 判断原因：[{record.Status}] {record.Reason}";
+            LatestReasonText.Text = $"[{record.Status}] {record.Reason}";
+            UpdateStatusDot(record.Status);
         });
     }
 
@@ -194,8 +204,8 @@ public partial class MainWindow : Window
         Dispatcher.BeginInvoke(() =>
         {
             LatestReasonText.Text = string.IsNullOrWhiteSpace(session.Summary)
-                ? "AI 判断原因：会话已结束。"
-                : $"AI 判断原因：会话已结束。{session.Summary}";
+                ? "Session completed."
+                : $"Session completed. {session.Summary}";
         });
     }
 
@@ -203,7 +213,7 @@ public partial class MainWindow : Window
     {
         Dispatcher.BeginInvoke(() =>
         {
-            LatestReasonText.Text = $"AI 判断原因：{message}";
+            LatestReasonText.Text = message;
         });
     }
 
@@ -233,14 +243,37 @@ public partial class MainWindow : Window
     {
         return state switch
         {
-            SessionState.Idle => "未开始",
-            SessionState.Preparing => "准备中",
-            SessionState.Running => "运行中",
-            SessionState.Analyzing => "分析中",
-            SessionState.Completed => "已完成",
-            SessionState.Cancelled => "已停止",
-            SessionState.Error => "错误",
+            SessionState.Idle => "Not started",
+            SessionState.Preparing => "Preparing",
+            SessionState.Running => "Running",
+            SessionState.Analyzing => "Analyzing",
+            SessionState.Completed => "Completed",
+            SessionState.Cancelled => "Stopped",
+            SessionState.Error => "Error",
             _ => state.ToString()
+        };
+    }
+
+    private void UpdateStatusDot(SessionState state)
+    {
+        StatusDot.Fill = state switch
+        {
+            SessionState.Running => RunningStatusBrush,
+            SessionState.Analyzing => AnalyzingStatusBrush,
+            SessionState.Error => DangerStatusBrush,
+            _ => NeutralStatusBrush
+        };
+    }
+
+    private void UpdateStatusDot(FocusStatus status)
+    {
+        StatusDot.Fill = status switch
+        {
+            FocusStatus.Focused => RunningStatusBrush,
+            FocusStatus.Wandering => WarningStatusBrush,
+            FocusStatus.Distracted => DangerStatusBrush,
+            FocusStatus.Idle => NeutralStatusBrush,
+            _ => AnalyzingStatusBrush
         };
     }
 }
