@@ -7,6 +7,7 @@
 - 输入本次专注目标和专注时长
 - 定时截取主屏幕
 - 调用 OpenAI-compatible 视觉模型判断专注状态
+- 专注时显示 Windows WPF 模拟的 Dynamic Island 风格顶部悬浮窗
 - 分心时显示顶部提醒和可选全屏半透明遮罩
 - 使用 SQLite 保存本地历史记录
 
@@ -64,6 +65,19 @@ dotnet publish -c Release -r win-x64 --self-contained true
 - 本地或第三方兼容服务的 `/v1` 地址
 
 程序会调用 `{BaseUrl}/chat/completions`。如果没有配置 API Key，程序仍可开始专注会话，但不会上传截图到 AI Provider，分析记录会显示“AI 配置不完整”。
+
+## Dynamic Island
+
+Windows 版支持一个 Dynamic Island 风格的顶部悬浮窗：
+
+- 这是 WPF 模拟效果，不是 macOS 系统级灵动岛。
+- 专注开始后会在主屏幕顶部居中显示。
+- Compact 模式显示当前状态、专注目标和实时计时。
+- Distracted 时会展开成 Alert，显示目标和 AI 判断原因。
+- Session completed / stopped 时会短暂显示完成状态，然后隐藏。
+- 设置页可以通过 `Enable Dynamic Island` 开启或关闭。
+
+主界面和 Dynamic Island 的计时显示每秒更新；AI 截屏分析仍按设置页里的 `Capture Interval Seconds` 执行，不会因为计时每秒刷新而每秒调用 AI。
 
 ## 本地数据
 

@@ -22,6 +22,8 @@ public sealed class FocusSessionManager
     private Task? _sessionTask;
     private FocusSession? _currentSession;
     private SessionState _state = SessionState.Idle;
+    private FocusStatus _currentFocusStatus = FocusStatus.Unknown;
+    private string _currentReason = string.Empty;
 
     public FocusSessionManager(
         ScreenCaptureService screenCaptureService,
@@ -55,6 +57,20 @@ public sealed class FocusSessionManager
 
     public event EventHandler<string>? ErrorOccurred;
 
+    public DateTime? CurrentSessionStartTime => _currentSession?.StartTime;
+
+    public SessionState CurrentState => _state;
+
+    public TimeSpan CurrentElapsed => _currentSession is null ? TimeSpan.Zero : GetElapsed(_currentSession);
+
+    public string CurrentGoal => _currentSession?.Goal ?? string.Empty;
+
+    public int CurrentDistractionCount => _currentSession?.DistractionCount ?? 0;
+
+    public FocusStatus CurrentFocusStatus => _currentFocusStatus;
+
+    public string CurrentReason => _currentReason;
+
     public async Task StartSessionAsync(string goal, TimeSpan duration)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(goal);
@@ -80,6 +96,8 @@ public sealed class FocusSessionManager
 
             await _storageService.CreateSessionAsync(session);
             _currentSession = session;
+            _currentFocusStatus = FocusStatus.Unknown;
+            _currentReason = string.Empty;
             _sessionCancellation = new CancellationTokenSource();
             SetState(SessionState.Running);
             TickUpdated?.Invoke(this, session);
@@ -287,6 +305,8 @@ public sealed class FocusSessionManager
         var accountedSeconds = Math.Max(1, Math.Min(intervalSeconds, remainingSeconds == 0 ? intervalSeconds : remainingSeconds));
 
         AddStatusSeconds(session, record.Status, accountedSeconds);
+        _currentFocusStatus = record.Status;
+        _currentReason = record.Reason;
         await _storageService.AddFrameRecordAsync(record);
         await _storageService.UpdateSessionAsync(session);
 

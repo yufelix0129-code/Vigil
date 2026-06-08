@@ -31,6 +31,7 @@ public partial class SettingsWindow : Window
         CaptureIntervalTextBox.Text = settings.CaptureIntervalSeconds.ToString();
         IdleThresholdTextBox.Text = settings.IdleThresholdSeconds.ToString();
         EnableOverlayCheckBox.IsChecked = settings.EnableOverlay;
+        EnableDynamicIslandCheckBox.IsChecked = settings.EnableDynamicIsland;
         SaveScreenshotsCheckBox.IsChecked = settings.SaveScreenshots;
     }
 
@@ -124,6 +125,7 @@ public partial class SettingsWindow : Window
         settings.CaptureIntervalSeconds = captureIntervalSeconds;
         settings.IdleThresholdSeconds = idleThresholdSeconds;
         settings.EnableOverlay = EnableOverlayCheckBox.IsChecked == true;
+        settings.EnableDynamicIsland = EnableDynamicIslandCheckBox.IsChecked == true;
         settings.SaveScreenshots = SaveScreenshotsCheckBox.IsChecked == true;
 
         return true;

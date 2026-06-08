@@ -148,6 +148,10 @@
                                           Margin="0,0,28,0"
                                           VerticalAlignment="Center"
                                           Content="Enable Overlay" />
+                                <CheckBox x:Name="EnableDynamicIslandCheckBox"
+                                          Margin="0,0,28,0"
+                                          VerticalAlignment="Center"
+                                          Content="Enable Dynamic Island" />
                                 <CheckBox x:Name="SaveScreenshotsCheckBox"
                                           VerticalAlignment="Center"
                                           Content="Save Screenshots" />

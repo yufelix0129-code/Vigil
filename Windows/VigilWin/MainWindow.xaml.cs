@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Threading;
 using VigilWin.Core;
 using VigilWin.Models;
 using VigilWin.Services;
@@ -23,7 +24,20 @@ public partial class MainWindow : Window
     private readonly StorageService _storageService;
     private readonly ScreenCaptureService _screenCaptureService;
     private readonly FocusSessionManager _sessionManager;
+    private readonly DynamicIslandService _dynamicIslandService;
     private readonly LogService _logService;
+    private readonly DispatcherTimer _uiTimer = new()
+    {
+        Interval = TimeSpan.FromSeconds(1)
+    };
+
+    private DateTime? _activeSessionStartTime;
+    private TimeSpan _lastElapsed = TimeSpan.Zero;
+    private string _activeGoal = string.Empty;
+    private FocusStatus _latestFocusStatus = FocusStatus.Unknown;
+    private string _latestReason = string.Empty;
+    private int _latestDistractionCount;
+    private bool _isClosing;
 
     public MainWindow()
     {
@@ -40,6 +54,7 @@ public partial class MainWindow : Window
         var notificationService = new NotificationService(_logService);
         var overlayService = new OverlayService(_logService);
         var frameAnalyzer = new FrameAnalyzer();
+        _dynamicIslandService = new DynamicIslandService(_logService);
 
         _sessionManager = new FocusSessionManager(
             _screenCaptureService,
@@ -57,6 +72,7 @@ public partial class MainWindow : Window
         _sessionManager.AnalysisUpdated += SessionManager_AnalysisUpdated;
         _sessionManager.SessionCompleted += SessionManager_SessionCompleted;
         _sessionManager.ErrorOccurred += SessionManager_ErrorOccurred;
+        _uiTimer.Tick += UiTimer_Tick;
 
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
@@ -90,6 +106,7 @@ public partial class MainWindow : Window
         try
         {
             await _sessionManager.StartSessionAsync(FocusGoalTextBox.Text, GetSelectedDuration());
+            StartSessionUi(FocusGoalTextBox.Text.Trim());
         }
         catch (Exception ex)
         {
@@ -102,8 +119,12 @@ public partial class MainWindow : Window
         try
         {
             await _sessionManager.StopSessionAsync();
-            CurrentStatusText.Text = "Stopped";
-            UpdateStatusDot(SessionState.Cancelled);
+            if (_activeSessionStartTime is null)
+            {
+                CurrentStatusText.Text = "Stopped";
+                UpdateStatusDot(SessionState.Cancelled);
+                _dynamicIslandService.Hide();
+            }
         }
         catch (Exception ex)
         {
@@ -119,6 +140,7 @@ public partial class MainWindow : Window
         };
 
         settingsWindow.ShowDialog();
+        ApplyDynamicIslandSetting();
     }
 
     private void HistoryButton_Click(object sender, RoutedEventArgs e)
@@ -156,6 +178,7 @@ public partial class MainWindow : Window
         try
         {
             _settingsService.Load();
+            ApplyDynamicIslandSetting();
             await _storageService.InitializeAsync();
             _logService.Info("MainWindow loaded.");
         }
@@ -168,6 +191,10 @@ public partial class MainWindow : Window
 
     private async void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
+        _isClosing = true;
+        _uiTimer.Stop();
+        _dynamicIslandService.SetEnabled(false);
+        _dynamicIslandService.Close();
         await _sessionManager.StopSessionAsync();
     }
 
@@ -177,6 +204,12 @@ public partial class MainWindow : Window
         {
             CurrentStatusText.Text = FormatState(state);
             UpdateStatusDot(state);
+
+            if (state is SessionState.Error)
+            {
+                StopUiTimer();
+                _dynamicIslandService.ShowStopped(_lastElapsed, "Session ended with an error.");
+            }
         });
     }
 
@@ -184,9 +217,15 @@ public partial class MainWindow : Window
     {
         Dispatcher.BeginInvoke(() =>
         {
-            var elapsed = (session.EndTime ?? DateTime.Now) - session.StartTime;
-            ElapsedTimeText.Text = FormatElapsed(elapsed);
-            DistractionCountText.Text = session.DistractionCount.ToString();
+            _activeGoal = session.Goal;
+            _latestDistractionCount = session.DistractionCount;
+            DistractionCountText.Text = _latestDistractionCount.ToString();
+
+            if (!_uiTimer.IsEnabled)
+            {
+                _lastElapsed = (session.EndTime ?? DateTime.Now) - session.StartTime;
+                ElapsedTimeText.Text = FormatElapsed(_lastElapsed);
+            }
         });
     }
 
@@ -194,8 +233,19 @@ public partial class MainWindow : Window
     {
         Dispatcher.BeginInvoke(() =>
         {
+            _latestFocusStatus = record.Status;
+            _latestReason = record.Reason;
             LatestReasonText.Text = $"[{record.Status}] {record.Reason}";
             UpdateStatusDot(record.Status);
+
+            if (record.Status == FocusStatus.Distracted)
+            {
+                _dynamicIslandService.ShowDistracted(_activeGoal, record.Reason, _lastElapsed);
+            }
+            else
+            {
+                _dynamicIslandService.UpdateStatus(record.Status, _lastElapsed, _activeGoal, record.Reason);
+            }
         });
     }
 
@@ -203,9 +253,31 @@ public partial class MainWindow : Window
     {
         Dispatcher.BeginInvoke(() =>
         {
+            StopUiTimer();
+            _lastElapsed = (session.EndTime ?? DateTime.Now) - session.StartTime;
+            ElapsedTimeText.Text = FormatElapsed(_lastElapsed);
+            _latestDistractionCount = session.DistractionCount;
+            DistractionCountText.Text = _latestDistractionCount.ToString();
+
             LatestReasonText.Text = string.IsNullOrWhiteSpace(session.Summary)
                 ? "Session completed."
                 : $"Session completed. {session.Summary}";
+
+            var finalState = _sessionManager.CurrentState;
+            if (finalState == SessionState.Cancelled)
+            {
+                _dynamicIslandService.ShowStopped(_lastElapsed, "Session stopped.");
+            }
+            else if (finalState == SessionState.Error)
+            {
+                _dynamicIslandService.ShowStopped(_lastElapsed, "Session ended with an error.");
+            }
+            else
+            {
+                _dynamicIslandService.ShowCompleted(_lastElapsed, session.DistractionCount);
+            }
+
+            _activeSessionStartTime = null;
         });
     }
 
@@ -213,7 +285,9 @@ public partial class MainWindow : Window
     {
         Dispatcher.BeginInvoke(() =>
         {
+            _latestReason = message;
             LatestReasonText.Text = message;
+            _dynamicIslandService.UpdateStatus(_latestFocusStatus, _lastElapsed, _activeGoal, message);
         });
     }
 
@@ -234,9 +308,7 @@ public partial class MainWindow : Window
 
     private static string FormatElapsed(TimeSpan elapsed)
     {
-        return elapsed.TotalHours >= 1
-            ? elapsed.ToString(@"hh\:mm\:ss")
-            : elapsed.ToString(@"mm\:ss");
+        return ElapsedTimeFormatter.Format(elapsed);
     }
 
     private static string FormatState(SessionState state)
@@ -275,5 +347,69 @@ public partial class MainWindow : Window
             FocusStatus.Idle => NeutralStatusBrush,
             _ => AnalyzingStatusBrush
         };
+    }
+
+    private void StartSessionUi(string goal)
+    {
+        _activeSessionStartTime = _sessionManager.CurrentSessionStartTime ?? DateTime.Now;
+        _lastElapsed = TimeSpan.Zero;
+        _activeGoal = goal;
+        _latestFocusStatus = FocusStatus.Unknown;
+        _latestReason = "Focus session started.";
+        _latestDistractionCount = 0;
+        ElapsedTimeText.Text = FormatElapsed(_lastElapsed);
+        DistractionCountText.Text = "0";
+        LatestReasonText.Text = "Focus session started.";
+
+        ApplyDynamicIslandSetting();
+        _dynamicIslandService.ShowSessionStarted(goal);
+        if (!_isClosing)
+        {
+            _dynamicIslandService.UpdateStatus(_latestFocusStatus, _lastElapsed, _activeGoal, _latestReason);
+        }
+
+        if (!_uiTimer.IsEnabled)
+        {
+            _uiTimer.Start();
+        }
+    }
+
+    private void UiTimer_Tick(object? sender, EventArgs e)
+    {
+        RefreshElapsedDisplay();
+    }
+
+    private void RefreshElapsedDisplay()
+    {
+        if (_activeSessionStartTime is null)
+        {
+            return;
+        }
+
+        _lastElapsed = DateTime.Now - _activeSessionStartTime.Value;
+        ElapsedTimeText.Text = FormatElapsed(_lastElapsed);
+        if (!_isClosing)
+        {
+            _dynamicIslandService.UpdateStatus(_latestFocusStatus, _lastElapsed, _activeGoal, _latestReason);
+        }
+    }
+
+    private void StopUiTimer()
+    {
+        if (_uiTimer.IsEnabled)
+        {
+            _uiTimer.Stop();
+        }
+    }
+
+    private void ApplyDynamicIslandSetting()
+    {
+        var settings = _settingsService.Load();
+        _dynamicIslandService.SetEnabled(settings.EnableDynamicIsland);
+
+        if (settings.EnableDynamicIsland && _activeSessionStartTime is not null)
+        {
+            _dynamicIslandService.UpdateStatus(_latestFocusStatus, _lastElapsed, _activeGoal, _latestReason);
+        }
     }
 }

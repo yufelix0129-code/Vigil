@@ -16,5 +16,7 @@ public sealed class AppSettings
 
     public bool EnableOverlay { get; set; } = true;
 
+    public bool EnableDynamicIsland { get; set; } = true;
+
     public bool SaveScreenshots { get; set; } = false;
 }
