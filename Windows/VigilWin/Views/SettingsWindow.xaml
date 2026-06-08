@@ -2,185 +2,206 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Settings"
-        Width="760"
-        Height="680"
-        MinWidth="680"
-        MinHeight="560"
+        Width="820"
+        Height="720"
+        MinWidth="720"
+        MinHeight="620"
         FontFamily="Segoe UI, Microsoft YaHei UI"
         WindowStartupLocation="CenterOwner">
     <Window.Background>
         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#F7F8FC" Offset="0" />
+            <GradientStop Color="{StaticResource AppBackgroundStart}" Offset="0" />
             <GradientStop Color="#EEF2F8" Offset="0.55" />
-            <GradientStop Color="#F6F3FF" Offset="1" />
+            <GradientStop Color="{StaticResource AppBackgroundEnd}" Offset="1" />
         </LinearGradientBrush>
     </Window.Background>
 
-    <Grid Margin="24">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <Grid Margin="26">
+        <Border x:Name="SettingsShell"
+                Padding="30"
+                Background="#F2FFFFFF"
+                BorderBrush="#F7FFFFFF"
+                BorderThickness="1"
+                CornerRadius="30">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="34"
+                                  Direction="270"
+                                  Opacity="0.12"
+                                  ShadowDepth="12"
+                                  Color="#687083" />
+            </Border.Effect>
 
-        <StackPanel Margin="4,0,4,22">
-            <TextBlock FontSize="30"
-                       FontWeight="SemiBold"
-                       Foreground="{StaticResource TextPrimaryBrush}"
-                       Text="Settings" />
-            <TextBlock Margin="0,6,0,0"
-                       Style="{StaticResource MutedTextStyle}"
-                       Text="Configure your AI provider and focus monitor behavior." />
-        </StackPanel>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-        <ScrollViewer Grid.Row="1"
-                      VerticalScrollBarVisibility="Auto">
-            <StackPanel>
-                <Border Margin="0,0,0,18"
-                        Style="{StaticResource CardBorderStyle}">
+                <StackPanel Margin="2,0,2,24">
+                    <TextBlock Style="{StaticResource PageTitleText}"
+                               Text="Settings" />
+                    <TextBlock Margin="0,6,0,0"
+                               Style="{StaticResource MutedTextStyle}"
+                               Text="Configure your provider, monitor cadence, and interface preferences." />
+                </StackPanel>
+
+                <ScrollViewer Grid.Row="1"
+                              VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <DockPanel Margin="0,0,0,22">
-                            <Button DockPanel.Dock="Right"
-                                    Width="116"
-                                    Style="{StaticResource PillButtonStyle}"
-                                    Click="TestButton_Click"
-                                    Content="Test Config" />
+                        <Border x:Name="AiSection"
+                                Margin="0,0,0,18"
+                                Style="{StaticResource SettingsSectionCard}">
                             <StackPanel>
-                                <TextBlock Style="{StaticResource SectionTitleTextStyle}"
-                                           Text="AI Provider" />
-                                <TextBlock Margin="0,5,0,0"
+                                <DockPanel Margin="0,0,0,22">
+                                    <Button DockPanel.Dock="Right"
+                                            Width="122"
+                                            Style="{StaticResource GhostButton}"
+                                            Click="TestButton_Click"
+                                            Content="Test Config" />
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource SectionTitleText}"
+                                                   Text="AI Provider" />
+                                        <TextBlock Margin="0,5,0,0"
+                                                   Style="{StaticResource MutedTextStyle}"
+                                                   Text="OpenAI-compatible vision endpoint. API Key is protected with Windows DPAPI." />
+                                    </StackPanel>
+                                </DockPanel>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="18" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="18" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <StackPanel Grid.Row="0"
+                                                Grid.Column="0">
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}"
+                                                   Text="Provider Name" />
+                                        <TextBox x:Name="ProviderNameTextBox"
+                                                 Style="{StaticResource ModernTextBox}" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="0"
+                                                Grid.Column="2">
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}"
+                                                   Text="Model" />
+                                        <TextBox x:Name="ModelTextBox"
+                                                 Style="{StaticResource ModernTextBox}" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="2"
+                                                Grid.Column="0">
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}"
+                                                   Text="Base URL" />
+                                        <TextBox x:Name="BaseUrlTextBox"
+                                                 Style="{StaticResource ModernTextBox}" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="2"
+                                                Grid.Column="2">
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}"
+                                                   Text="API Key" />
+                                        <PasswordBox x:Name="ApiKeyPasswordBox"
+                                                     Style="{StaticResource ModernPasswordBox}" />
+                                        <TextBlock x:Name="ApiKeyStatusText"
+                                                   Margin="0,8,0,0"
+                                                   Style="{StaticResource CaptionText}"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border x:Name="FocusSection"
+                                Margin="0,0,0,18"
+                                Style="{StaticResource SettingsSectionCard}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SectionTitleText}"
+                                           Text="Focus Monitor" />
+                                <TextBlock Margin="0,5,0,22"
                                            Style="{StaticResource MutedTextStyle}"
-                                           Text="OpenAI-compatible vision endpoint. API Key is DPAPI-protected." />
-                            </StackPanel>
-                        </DockPanel>
+                                           Text="Tune how often Vigil captures the screen and when it treats the device as idle." />
 
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="16" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="18" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="18" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
 
-                            <StackPanel Grid.Row="0"
-                                        Grid.Column="0">
-                                <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                           Text="Provider Name" />
-                                <TextBox x:Name="ProviderNameTextBox"
-                                         Style="{StaticResource RoundedTextBoxStyle}" />
-                            </StackPanel>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}"
+                                                   Text="Capture Interval Seconds" />
+                                        <TextBox x:Name="CaptureIntervalTextBox"
+                                                 Style="{StaticResource ModernTextBox}" />
+                                    </StackPanel>
 
-                            <StackPanel Grid.Row="0"
-                                        Grid.Column="2">
-                                <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                           Text="Model" />
-                                <TextBox x:Name="ModelTextBox"
-                                         Style="{StaticResource RoundedTextBoxStyle}" />
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}"
+                                                   Text="Idle Threshold Seconds" />
+                                        <TextBox x:Name="IdleThresholdTextBox"
+                                                 Style="{StaticResource ModernTextBox}" />
+                                    </StackPanel>
+                                </Grid>
                             </StackPanel>
+                        </Border>
 
-                            <StackPanel Grid.Row="2"
-                                        Grid.Column="0">
-                                <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                           Text="Base URL" />
-                                <TextBox x:Name="BaseUrlTextBox"
-                                         Style="{StaticResource RoundedTextBoxStyle}" />
-                            </StackPanel>
+                        <Border x:Name="InterfaceSection"
+                                Style="{StaticResource SettingsSectionCard}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SectionTitleText}"
+                                           Text="Interface" />
+                                <TextBlock Margin="0,5,0,20"
+                                           Style="{StaticResource MutedTextStyle}"
+                                           Text="Control the floating island, distraction overlay, and local screenshot storage." />
 
-                            <StackPanel Grid.Row="2"
-                                        Grid.Column="2">
-                                <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                           Text="API Key" />
-                                <PasswordBox x:Name="ApiKeyPasswordBox"
-                                             Style="{StaticResource RoundedPasswordBoxStyle}" />
-                                <TextBlock x:Name="ApiKeyStatusText"
-                                           Margin="0,8,0,0"
-                                           Foreground="{StaticResource TextMutedBrush}"
-                                           TextWrapping="Wrap" />
+                                <WrapPanel>
+                                    <CheckBox x:Name="EnableDynamicIslandCheckBox"
+                                              Margin="0,0,28,12"
+                                              Style="{StaticResource ModernCheckBox}"
+                                              Content="Enable Dynamic Island" />
+                                    <CheckBox x:Name="EnableOverlayCheckBox"
+                                              Margin="0,0,28,12"
+                                              Style="{StaticResource ModernCheckBox}"
+                                              Content="Enable Overlay" />
+                                    <CheckBox x:Name="SaveScreenshotsCheckBox"
+                                              Margin="0,0,0,12"
+                                              Style="{StaticResource ModernCheckBox}"
+                                              Content="Save Screenshots" />
+                                </WrapPanel>
                             </StackPanel>
-                        </Grid>
+                        </Border>
                     </StackPanel>
-                </Border>
+                </ScrollViewer>
 
-                <Border Style="{StaticResource CardBorderStyle}">
-                    <StackPanel>
-                        <TextBlock Style="{StaticResource SectionTitleTextStyle}"
-                                   Text="Focus Monitor" />
-                        <TextBlock Margin="0,5,0,22"
-                                   Style="{StaticResource MutedTextStyle}"
-                                   Text="Tune how often Vigil captures your screen and when it treats you as idle." />
+                <DockPanel Grid.Row="2"
+                           LastChildFill="False"
+                           Margin="0,24,0,0">
+                    <TextBlock VerticalAlignment="Center"
+                               Style="{StaticResource CaptionText}"
+                               Text="Settings are stored locally under %APPDATA%/VigilWin." />
 
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="16" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="22" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-
-                            <StackPanel Grid.Row="0"
-                                        Grid.Column="0">
-                                <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                           Text="Capture Interval Seconds" />
-                                <TextBox x:Name="CaptureIntervalTextBox"
-                                         Style="{StaticResource RoundedTextBoxStyle}" />
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="0"
-                                        Grid.Column="2">
-                                <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                           Text="Idle Threshold Seconds" />
-                                <TextBox x:Name="IdleThresholdTextBox"
-                                         Style="{StaticResource RoundedTextBoxStyle}" />
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="2"
-                                        Grid.ColumnSpan="3"
-                                        Orientation="Horizontal">
-                                <CheckBox x:Name="EnableOverlayCheckBox"
-                                          Margin="0,0,28,0"
-                                          VerticalAlignment="Center"
-                                          Content="Enable Overlay" />
-                                <CheckBox x:Name="EnableDynamicIslandCheckBox"
-                                          Margin="0,0,28,0"
-                                          VerticalAlignment="Center"
-                                          Content="Enable Dynamic Island" />
-                                <CheckBox x:Name="SaveScreenshotsCheckBox"
-                                          VerticalAlignment="Center"
-                                          Content="Save Screenshots" />
-                            </StackPanel>
-                        </Grid>
+                    <StackPanel DockPanel.Dock="Right"
+                                Orientation="Horizontal">
+                        <Button Width="112"
+                                Margin="0,0,12,0"
+                                Style="{StaticResource SecondaryButton}"
+                                Click="CancelButton_Click"
+                                Content="Cancel" />
+                        <Button Width="112"
+                                Style="{StaticResource PrimaryButton}"
+                                Click="SaveButton_Click"
+                                Content="Save" />
                     </StackPanel>
-                </Border>
-            </StackPanel>
-        </ScrollViewer>
-
-        <DockPanel Grid.Row="2"
-                   LastChildFill="False"
-                   Margin="0,22,0,0">
-            <TextBlock VerticalAlignment="Center"
-                       Foreground="{StaticResource TextMutedBrush}"
-                       Text="Settings are stored locally under %APPDATA%/VigilWin." />
-
-            <StackPanel DockPanel.Dock="Right"
-                        Orientation="Horizontal">
-                <Button Width="110"
-                        Margin="0,0,12,0"
-                        Style="{StaticResource SecondaryButtonStyle}"
-                        Click="CancelButton_Click"
-                        Content="Cancel" />
-                <Button Width="110"
-                        Style="{StaticResource PrimaryButtonStyle}"
-                        Click="SaveButton_Click"
-                        Content="Save" />
-            </StackPanel>
-        </DockPanel>
+                </DockPanel>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

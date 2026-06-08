@@ -284,6 +284,10 @@ public partial class DynamicIslandWindow : Window
         ExpandedElapsedText.Text = elapsedText;
         ReasonText.Text = string.IsNullOrWhiteSpace(reason) ? $"Current status: {statusText}" : reason;
         SessionProgressBar.Foreground = brush;
+        CompactProgressBar.Foreground = brush;
+        IslandRoot.BorderBrush = status == FocusStatus.Distracted
+            ? new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 104, 87)) { Opacity = 0.48 }
+            : (System.Windows.Media.Brush)FindResource("IslandBorderBrush");
 
         if (_mode is DynamicIslandMode.Hidden or DynamicIslandMode.Compact
             || (_mode == DynamicIslandMode.Expanded && DateTime.Now >= _titlePinnedUntil))
@@ -303,24 +307,29 @@ public partial class DynamicIslandWindow : Window
         }
         else if (plannedDuration.TotalSeconds <= 0)
         {
-            percent = 0;
+            percent = 18;
         }
         else
         {
             percent = Math.Clamp(elapsed.TotalSeconds / plannedDuration.TotalSeconds * 100, 0, 100);
         }
 
-        var current = SessionProgressBar.Value;
-        var progressAnimation = new DoubleAnimation(current, percent, TimeSpan.FromMilliseconds(280))
+        var progressAnimation = new DoubleAnimation(SessionProgressBar.Value, percent, TimeSpan.FromMilliseconds(280))
         {
             EasingFunction = CreateEase(EasingMode.EaseOut)
         };
         SessionProgressBar.BeginAnimation(RangeBase.ValueProperty, progressAnimation);
 
+        var compactProgressAnimation = new DoubleAnimation(CompactProgressBar.Value, percent, TimeSpan.FromMilliseconds(280))
+        {
+            EasingFunction = CreateEase(EasingMode.EaseOut)
+        };
+        CompactProgressBar.BeginAnimation(RangeBase.ValueProperty, compactProgressAnimation);
+
         ProgressPercentText.Text = $"{percent:0}%";
         ProgressLabelText.Text = plannedDuration.TotalSeconds > 0
             ? $"Progress · {ElapsedTimeFormatter.Format(elapsed)} / {ElapsedTimeFormatter.Format(plannedDuration)}"
-            : "Focus timeline";
+            : "Focus timeline warming up";
     }
 
     private void PositionAtTopCenter(double width)

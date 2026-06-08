@@ -1,6 +1,7 @@
 using System.Windows;
 using VigilWin.Models;
 using VigilWin.Services;
+using VigilWin.Utilities;
 using MessageBox = System.Windows.MessageBox;
 
 namespace VigilWin.Views;
@@ -16,7 +17,16 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         _settingsService = settingsService;
         _logService = logService;
+        Loaded += SettingsWindow_Loaded;
         LoadSettings();
+    }
+
+    private void SettingsWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        AnimationHelper.FadeInUp(SettingsShell, durationMs: 300);
+        AnimationHelper.FadeInUp(AiSection, fromY: 10, durationMs: 280, delayMs: 50);
+        AnimationHelper.FadeInUp(FocusSection, fromY: 10, durationMs: 280, delayMs: 90);
+        AnimationHelper.FadeInUp(InterfaceSection, fromY: 10, durationMs: 280, delayMs: 130);
     }
 
     private void LoadSettings()
@@ -139,7 +149,7 @@ public partial class SettingsWindow : Window
         }
 
         return string.IsNullOrWhiteSpace(settings.AIProvider.EncryptedApiKey)
-            ? "未保存 API Key。"
-            : "已保存 API Key，重新输入会覆盖。";
+            ? "No API key saved."
+            : "API key saved securely. Enter a new key to replace it.";
     }
 }

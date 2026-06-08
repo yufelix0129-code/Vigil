@@ -15,8 +15,8 @@
     <Border x:Name="IslandRoot"
             Margin="8"
             Padding="18,12"
-            Background="#F2181A20"
-            BorderBrush="#30FFFFFF"
+            Background="{StaticResource IslandBackgroundBrush}"
+            BorderBrush="{StaticResource IslandBorderBrush}"
             BorderThickness="1"
             CornerRadius="38"
             MouseEnter="IslandRoot_MouseEnter"
@@ -33,7 +33,7 @@
         </Border.Effect>
         <Border.RenderTransform>
             <TransformGroup>
-                <ScaleTransform x:Name="IslandScale"
+            <ScaleTransform x:Name="IslandScale"
                                 ScaleX="0.98"
                                 ScaleY="0.98" />
                 <TranslateTransform x:Name="IslandTranslate"
@@ -42,45 +42,84 @@
         </Border.RenderTransform>
 
         <Grid>
+            <Border Height="1"
+                    Margin="22,0,22,0"
+                    VerticalAlignment="Top"
+                    Background="{StaticResource IslandHighlightBrush}"
+                    CornerRadius="1"
+                    IsHitTestVisible="False" />
+
             <Grid x:Name="CompactContent"
                   Opacity="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <StackPanel VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal">
-                        <Ellipse x:Name="CompactStatusDot"
-                                 Width="10"
-                                 Height="10"
-                                 Margin="0,0,9,0"
-                                 VerticalAlignment="Center"
-                                 Fill="#8B93A3" />
-                        <TextBlock x:Name="CompactStatusText"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="#F6F7FB"
-                                   Text="Monitoring" />
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse x:Name="CompactStatusDot"
+                                     Width="10"
+                                     Height="10"
+                                     Margin="0,0,9,0"
+                                     VerticalAlignment="Center"
+                                     Fill="#8B93A3" />
+                            <TextBlock x:Name="CompactStatusText"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource IslandTextPrimaryBrush}"
+                                       Text="Monitoring" />
+                        </StackPanel>
+                        <TextBlock x:Name="CompactGoalText"
+                                   Width="192"
+                                   Margin="0,5,0,0"
+                                   FontSize="11"
+                                   Foreground="{StaticResource IslandTextSecondaryBrush}"
+                                   Text="Focus goal"
+                                   TextTrimming="CharacterEllipsis"
+                                   TextWrapping="NoWrap" />
                     </StackPanel>
-                    <TextBlock x:Name="CompactGoalText"
-                               Width="192"
-                               Margin="0,5,0,0"
-                               FontSize="11"
-                               Foreground="#AEB4C2"
-                               Text="Focus goal"
-                               TextTrimming="CharacterEllipsis"
-                               TextWrapping="NoWrap" />
-                </StackPanel>
 
-                <TextBlock x:Name="CompactElapsedText"
-                           Grid.Column="1"
-                           Margin="18,0,0,0"
-                           VerticalAlignment="Center"
-                           FontSize="25"
-                           FontWeight="SemiBold"
-                           Foreground="White"
-                           Text="00:00" />
+                    <TextBlock x:Name="CompactElapsedText"
+                               Grid.Column="1"
+                               Margin="18,0,0,0"
+                               VerticalAlignment="Center"
+                               FontFamily="Cascadia Mono, Consolas, Segoe UI"
+                               FontSize="25"
+                               FontWeight="SemiBold"
+                               Foreground="White"
+                               Text="00:00" />
+                </Grid>
+
+                <ProgressBar x:Name="CompactProgressBar"
+                             Grid.Row="1"
+                             Height="2"
+                             Margin="3,8,3,0"
+                             Maximum="100"
+                             Minimum="0"
+                             Value="0"
+                             Foreground="#35D3AE"
+                             Background="{StaticResource IslandProgressTrackBrush}"
+                             BorderThickness="0">
+                    <ProgressBar.Template>
+                        <ControlTemplate TargetType="ProgressBar">
+                            <Grid ClipToBounds="True">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="1" />
+                                <Border x:Name="PART_Indicator"
+                                        HorizontalAlignment="Left"
+                                        Background="{TemplateBinding Foreground}"
+                                        CornerRadius="1" />
+                            </Grid>
+                        </ControlTemplate>
+                    </ProgressBar.Template>
+                </ProgressBar>
             </Grid>
 
             <Grid x:Name="ExpandedContent"
@@ -100,6 +139,7 @@
                                Margin="18,0,0,0"
                                FontSize="22"
                                FontWeight="SemiBold"
+                               FontFamily="Cascadia Mono, Consolas, Segoe UI"
                                Foreground="White"
                                Text="00:00" />
                     <StackPanel Orientation="Horizontal">
@@ -112,7 +152,7 @@
                         <TextBlock x:Name="ExpandedTitleText"
                                    FontSize="17"
                                    FontWeight="SemiBold"
-                                   Foreground="White"
+                                   Foreground="{StaticResource IslandTextPrimaryBrush}"
                                    Text="Focus session started"
                                    TextTrimming="CharacterEllipsis" />
                     </StackPanel>
@@ -123,7 +163,7 @@
                     <TextBlock x:Name="ExpandedGoalText"
                                FontSize="14"
                                FontWeight="SemiBold"
-                               Foreground="#E9ECF3"
+                               Foreground="{StaticResource IslandTextPrimaryBrush}"
                                Text="Goal: Focus goal"
                                TextTrimming="CharacterEllipsis"
                                TextWrapping="NoWrap" />
@@ -131,7 +171,7 @@
                                Margin="0,7,0,0"
                                MaxHeight="48"
                                FontSize="12"
-                               Foreground="#AEB4C2"
+                               Foreground="{StaticResource IslandTextSecondaryBrush}"
                                LineHeight="17"
                                Text="Current status: Monitoring"
                                TextWrapping="Wrap" />
@@ -158,25 +198,25 @@
                     </DockPanel>
                     <ProgressBar x:Name="SessionProgressBar"
                                  Grid.Row="1"
-                                 Height="8"
+                                 Height="6"
                                  Maximum="100"
                                  Minimum="0"
                                  Value="0"
                                  Foreground="#35D3AE"
-                                 Background="#29FFFFFF"
+                                 Background="{StaticResource IslandProgressTrackBrush}"
                                  BorderThickness="0">
                         <ProgressBar.Template>
                             <ControlTemplate TargetType="ProgressBar">
                                 <Grid ClipToBounds="True">
                                     <Border Background="{TemplateBinding Background}"
-                                            CornerRadius="4" />
+                                            CornerRadius="3" />
                                     <Border x:Name="PART_Track"
                                             Background="Transparent"
-                                            CornerRadius="4" />
+                                            CornerRadius="3" />
                                     <Border x:Name="PART_Indicator"
                                             HorizontalAlignment="Left"
                                             Background="{TemplateBinding Foreground}"
-                                            CornerRadius="4" />
+                                            CornerRadius="3" />
                                 </Grid>
                             </ControlTemplate>
                         </ProgressBar.Template>
@@ -190,13 +230,13 @@
                     <Button Width="104"
                             Height="32"
                             Margin="0,0,8,0"
-                            Style="{StaticResource PrimaryButtonStyle}"
+                            Style="{StaticResource IslandButtonStyle}"
                             Click="BackToFocusButton_Click"
                             Content="Back to Focus"
                             FontSize="11" />
                     <Button Width="64"
                             Height="32"
-                            Style="{StaticResource SecondaryButtonStyle}"
+                            Style="{StaticResource IslandGhostButtonStyle}"
                             Click="HideButton_Click"
                             Content="Hide"
                             FontSize="11" />

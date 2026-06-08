@@ -6,6 +6,8 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Styles/AppStyles.xaml" />
+                <ResourceDictionary Source="Styles/AnimationStyles.xaml" />
+                <ResourceDictionary Source="Styles/DynamicIslandStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

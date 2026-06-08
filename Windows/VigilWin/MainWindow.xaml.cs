@@ -7,6 +7,7 @@ using System.Windows.Threading;
 using VigilWin.Core;
 using VigilWin.Models;
 using VigilWin.Services;
+using VigilWin.Utilities;
 using VigilWin.Views;
 using MessageBox = System.Windows.MessageBox;
 
@@ -180,6 +181,9 @@ public partial class MainWindow : Window
     {
         try
         {
+            AnimationHelper.FadeInUp(MainShell, durationMs: 320);
+            AnimationHelper.FadeInUp(FocusSetupCard, fromY: 10, durationMs: 320, delayMs: 60);
+            AnimationHelper.FadeInUp(LiveStatusCard, fromY: 10, durationMs: 320, delayMs: 120);
             _settingsService.Load();
             ApplyDynamicIslandSetting();
             await _storageService.InitializeAsync();

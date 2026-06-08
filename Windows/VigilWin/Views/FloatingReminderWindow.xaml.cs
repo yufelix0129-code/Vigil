@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Threading;
+using VigilWin.Utilities;
 
 namespace VigilWin.Views;
 
@@ -9,6 +10,7 @@ public partial class FloatingReminderWindow : Window
     {
         Interval = TimeSpan.FromSeconds(10)
     };
+    private bool _isClosing;
 
     public FloatingReminderWindow(string goal, string reason)
     {
@@ -19,18 +21,31 @@ public partial class FloatingReminderWindow : Window
 
         Loaded += FloatingReminderWindow_Loaded;
         Closed += (_, _) => _closeTimer.Stop();
-        _closeTimer.Tick += (_, _) => Close();
+        _closeTimer.Tick += (_, _) => BeginClose();
     }
 
     private void FloatingReminderWindow_Loaded(object sender, RoutedEventArgs e)
     {
         Left = SystemParameters.WorkArea.Left + (SystemParameters.WorkArea.Width - ActualWidth) / 2;
         Top = SystemParameters.WorkArea.Top + 24;
+        AnimationHelper.FadeInUp(ReminderShell, fromY: -10, durationMs: 240);
         _closeTimer.Start();
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
-        Close();
+        BeginClose();
+    }
+
+    private void BeginClose()
+    {
+        if (_isClosing)
+        {
+            return;
+        }
+
+        _isClosing = true;
+        _closeTimer.Stop();
+        AnimationHelper.FadeOutUp(ReminderShell, () => Close(), toY: -10, durationMs: 200);
     }
 }

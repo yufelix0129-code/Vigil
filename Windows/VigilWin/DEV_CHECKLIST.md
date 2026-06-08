@@ -15,10 +15,12 @@ dotnet run --project Windows\VigilWin\VigilWin.csproj
 ## Feature Checks
 
 - 主界面可以打开。
+- 主窗口打开时有轻量 fade/translate 动画，动画不阻塞启动。
 - 主界面左侧 Start Focus / Stop Focus 按钮完整显示，不被卡片底部裁切。
 - Live Status 底部 Latest AI reason 区域有占位文字且不被裁切。
 - “测试截屏”可以生成 `%APPDATA%/VigilWin/test-screenshot.jpg`。
 - 设置页可以保存并重新读取 Base URL、Model、Capture Interval、Idle Threshold。
+- 设置页分为 AI Provider、Focus Monitor、Interface 三个 section，API Key 不明文显示。
 - 开始专注成功。
 - 主界面计时每秒连续更新，不跟随 AI 分析 tick 跳变。
 - Enable Dynamic Island 开启时，专注开始后顶部灵动岛出现并每秒更新时间。
@@ -30,6 +32,9 @@ dotnet run --project Windows\VigilWin\VigilWin.csproj
 - 没有 API Key 时不崩溃，也不发起 AI 请求。
 - Idle 检测不崩溃。
 - 历史记录窗口可以打开。
+- 历史页列表选中态不是默认蓝色，详情页四个统计卡片显示正常。
+- Floating Reminder 以顶部 toast 形式出现并自动 fade out。
+- Overlay 可以手动关闭，也会自动 fade out。
 - 日志文件生成在 `%APPDATA%/VigilWin/logs/vigil.log`。
 - 发布脚本可以生成 exe。
 

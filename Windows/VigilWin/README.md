@@ -11,6 +11,15 @@
 - 分心时显示顶部提醒和可选全屏半透明遮罩
 - 使用 SQLite 保存本地历史记录
 
+## UI 状态
+
+Windows 版界面正在朝 macOS 原版 Vigil 的质感靠近：
+
+- 主窗口使用浅色 Liquid Glass 风格卡片、柔和阴影和轻量打开动画。
+- 设置页采用 AI Provider / Focus Monitor / Interface 三段式偏好设置布局。
+- 历史页使用圆角 session 卡片和统计卡片，避免默认 WPF 蓝色选中样式。
+- Floating Reminder 是轻量顶部 toast；Overlay 是可关闭的 glass modal。
+
 ## 从源码运行
 
 需要：
@@ -73,6 +82,7 @@ Windows 版支持一个 Dynamic Island 风格的顶部悬浮窗：
 - 这是 WPF 模拟效果，不是 macOS 系统级灵动岛。
 - 专注开始后会在主屏幕顶部居中显示。
 - Compact 模式显示当前状态、专注目标和实时计时。
+- Compact 底部有极细进度线，时间每秒更新但不触发整窗尺寸动画。
 - 点击灵动岛可在 Compact 和 Expanded 之间切换，切换使用 WPF 原生宽高、透明度和阴影动画。
 - Expanded / Alert 底部有专注进度条，参考 macOS 原版的 FocusTimelineBar 思路，用于避免展开态出现空白区域。
 - Distracted 时会展开成 Alert，显示目标和 AI 判断原因，并在一段时间后自动收回 Compact。
@@ -80,6 +90,8 @@ Windows 版支持一个 Dynamic Island 风格的顶部悬浮窗：
 - 设置页可以通过 `Enable Dynamic Island` 开启或关闭。
 
 主界面和 Dynamic Island 的计时显示每秒更新；AI 截屏分析仍按设置页里的 `Capture Interval Seconds` 执行，不会因为计时每秒刷新而每秒调用 AI。
+
+如果某台机器上动画明显卡顿，可以在设置页关闭 `Enable Dynamic Island`，主窗口计时、截屏、AI 分析和历史记录仍会照常工作。
 
 ## 本地数据
 

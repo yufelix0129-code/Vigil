@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using VigilWin.Models;
 using VigilWin.Services;
+using VigilWin.Utilities;
 using MessageBox = System.Windows.MessageBox;
 
 namespace VigilWin.Views;
@@ -23,6 +24,9 @@ public partial class HistoryWindow : Window
     {
         try
         {
+            AnimationHelper.FadeInUp(HistoryShell, durationMs: 300);
+            AnimationHelper.FadeInUp(RecentSessionsCard, fromY: 10, durationMs: 280, delayMs: 50);
+            AnimationHelper.FadeInUp(SessionDetailsCard, fromY: 10, durationMs: 280, delayMs: 100);
             var sessions = await _storageService.GetRecentSessionsAsync(20);
             SessionListBox.ItemsSource = sessions;
             SessionListBox.Visibility = sessions.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
@@ -61,8 +65,13 @@ public partial class HistoryWindow : Window
         DetailSummaryText.Text = string.IsNullOrWhiteSpace(session.Summary)
             ? "No summary yet."
             : session.Summary;
+        FocusedSecondsText.Text = $"{session.FocusedSeconds}s";
+        WanderingSecondsText.Text = $"{session.WanderingSeconds}s";
+        DistractedSecondsText.Text = $"{session.DistractedSeconds}s";
+        IdleSecondsText.Text = $"{session.IdleSeconds}s";
         EmptyDetailsText.Visibility = Visibility.Collapsed;
         DetailsContentPanel.Visibility = Visibility.Visible;
+        AnimationHelper.FadeInUp(DetailsContentPanel, fromY: 6, durationMs: 220);
 
         try
         {
