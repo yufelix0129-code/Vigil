@@ -2,10 +2,10 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Vigil for Windows"
-        Width="980"
-        Height="660"
-        MinWidth="860"
-        MinHeight="560"
+        Width="1040"
+        Height="760"
+        MinWidth="900"
+        MinHeight="700"
         FontFamily="Segoe UI, Microsoft YaHei UI"
         WindowStartupLocation="CenterScreen">
     <Window.Background>
@@ -16,228 +16,264 @@
         </LinearGradientBrush>
     </Window.Background>
 
-    <Grid Margin="24">
-        <Border Padding="30"
-                Background="#EFFFFFFF"
-                BorderBrush="#F4FFFFFF"
-                BorderThickness="1"
-                CornerRadius="24">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="34"
-                                  Direction="270"
-                                  Opacity="0.14"
-                                  ShadowDepth="14"
-                                  Color="#687083" />
-            </Border.Effect>
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                  VerticalScrollBarVisibility="Auto">
+        <Grid Margin="24">
+            <Border Padding="32"
+                    Background="#F2FFFFFF"
+                    BorderBrush="#F7FFFFFF"
+                    BorderThickness="1"
+                    CornerRadius="28">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="36"
+                                      Direction="270"
+                                      Opacity="0.13"
+                                      ShadowDepth="12"
+                                      Color="#687083" />
+                </Border.Effect>
 
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                <DockPanel Grid.Row="0"
-                           Margin="0,0,0,28">
-                    <StackPanel DockPanel.Dock="Right"
-                                Orientation="Horizontal">
-                        <Button Margin="0,0,10,0"
-                                Style="{StaticResource PillButtonStyle}"
-                                Click="SettingsButton_Click"
-                                Content="Settings" />
-                        <Button Style="{StaticResource PillButtonStyle}"
-                                Click="HistoryButton_Click"
-                                Content="History" />
-                    </StackPanel>
-
-                    <StackPanel>
-                        <TextBlock FontSize="32"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}"
-                                   Text="Vigil" />
-                        <TextBlock Margin="0,5,0,0"
-                                   FontSize="14"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                   Text="AI-powered focus monitor for Windows" />
-                    </StackPanel>
-                </DockPanel>
-
-                <Grid Grid.Row="1">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.12*" />
-                        <ColumnDefinition Width="24" />
-                        <ColumnDefinition Width="0.88*" />
-                    </Grid.ColumnDefinitions>
-
-                    <Border Grid.Column="0"
-                            Style="{StaticResource CardBorderStyle}">
-                        <StackPanel>
-                            <TextBlock Style="{StaticResource SectionTitleTextStyle}"
-                                       Text="Start a focus session" />
-                            <TextBlock Margin="0,6,0,24"
-                                       Style="{StaticResource MutedTextStyle}"
-                                       Text="Tell Vigil what you are working on. It will quietly monitor your focus and nudge you back when needed." />
-
-                            <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                       Text="Focus goal" />
-                            <Grid Margin="0,0,0,22">
-                                <TextBox x:Name="FocusGoalTextBox"
-                                         Style="{StaticResource RoundedTextBoxStyle}"
-                                         TextChanged="FocusGoalTextBox_TextChanged" />
-                                <TextBlock x:Name="FocusGoalPlaceholder"
-                                           Margin="14,0,0,0"
-                                           VerticalAlignment="Center"
-                                           Foreground="{StaticResource TextMutedBrush}"
-                                           IsHitTestVisible="False"
-                                           Text="What do you want to focus on? e.g., review chemistry equations" />
-                            </Grid>
-
-                            <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                       Text="Session length" />
-                            <ComboBox x:Name="DurationComboBox"
-                                      Margin="0,0,0,28"
-                                      Style="{StaticResource CleanComboBoxStyle}"
-                                      SelectedIndex="1">
-                                <ComboBoxItem Content="15 分钟" />
-                                <ComboBoxItem Content="25 分钟" />
-                                <ComboBoxItem Content="45 分钟" />
-                                <ComboBoxItem Content="60 分钟" />
-                            </ComboBox>
-
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="14" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-
-                                <Button Grid.Column="0"
-                                        Style="{StaticResource PrimaryButtonStyle}"
-                                        Click="StartFocusButton_Click"
-                                        Content="Start Focus" />
-
-                                <Button Grid.Column="2"
-                                        Style="{StaticResource SecondaryButtonStyle}"
-                                        Click="StopFocusButton_Click"
-                                        Content="Stop Focus" />
-                            </Grid>
+                    <DockPanel Grid.Row="0"
+                               Margin="0,0,0,28">
+                        <StackPanel DockPanel.Dock="Right"
+                                    Orientation="Horizontal">
+                            <Button Margin="0,0,10,0"
+                                    Style="{StaticResource PillButtonStyle}"
+                                    Click="SettingsButton_Click"
+                                    Content="Settings" />
+                            <Button Style="{StaticResource PillButtonStyle}"
+                                    Click="HistoryButton_Click"
+                                    Content="History" />
                         </StackPanel>
-                    </Border>
 
-                    <Border Grid.Column="2"
-                            Style="{StaticResource CardBorderStyle}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
+                        <StackPanel>
+                            <TextBlock FontSize="34"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       Text="Vigil" />
+                            <TextBlock Margin="0,5,0,0"
+                                       FontSize="14"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       Text="AI-powered focus monitor for Windows" />
+                        </StackPanel>
+                    </DockPanel>
 
-                            <DockPanel>
-                                <Ellipse x:Name="StatusDot"
-                                         Width="12"
-                                         Height="12"
-                                         Margin="0,0,10,0"
-                                         Fill="#A6AFBD"
-                                         DockPanel.Dock="Left" />
-                                <TextBlock Style="{StaticResource SectionTitleTextStyle}"
+                    <Grid Grid.Row="1"
+                          MinHeight="470">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.08*" />
+                            <ColumnDefinition Width="26" />
+                            <ColumnDefinition Width="0.92*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0"
+                                Style="{StaticResource CardBorderStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0"
+                                           Style="{StaticResource SectionTitleTextStyle}"
+                                           Text="Start a focus session" />
+                                <TextBlock Grid.Row="1"
+                                           Margin="0,7,0,24"
+                                           Style="{StaticResource MutedTextStyle}"
+                                           Text="Tell Vigil what you are working on. It will quietly monitor your focus and nudge you back when needed." />
+
+                                <TextBlock Grid.Row="2"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="Focus goal" />
+                                <Grid Grid.Row="3"
+                                      Margin="0,0,0,22">
+                                    <TextBox x:Name="FocusGoalTextBox"
+                                             Style="{StaticResource RoundedTextBoxStyle}"
+                                             TextChanged="FocusGoalTextBox_TextChanged" />
+                                    <TextBlock x:Name="FocusGoalPlaceholder"
+                                               Margin="14,0,14,0"
+                                               VerticalAlignment="Center"
+                                               Foreground="{StaticResource TextMutedBrush}"
+                                               IsHitTestVisible="False"
+                                               Text="What do you want to focus on? e.g., review chemistry equations"
+                                               TextTrimming="CharacterEllipsis" />
+                                </Grid>
+
+                                <TextBlock Grid.Row="4"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="Session length" />
+                                <ComboBox x:Name="DurationComboBox"
+                                          Grid.Row="5"
+                                          Margin="0,0,0,0"
+                                          Style="{StaticResource CleanComboBoxStyle}"
+                                          SelectedIndex="1">
+                                    <ComboBoxItem Content="15 分钟" />
+                                    <ComboBoxItem Content="25 分钟" />
+                                    <ComboBoxItem Content="45 分钟" />
+                                    <ComboBoxItem Content="60 分钟" />
+                                </ComboBox>
+
+                                <Grid Grid.Row="7"
+                                      Margin="0,28,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="14" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Grid.Column="0"
+                                            Height="48"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            Click="StartFocusButton_Click"
+                                            Content="Start Focus" />
+
+                                    <Button Grid.Column="2"
+                                            Height="48"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Click="StopFocusButton_Click"
+                                            Content="Stop Focus" />
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <Border Grid.Column="2"
+                                Style="{StaticResource CardBorderStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0"
+                                           Style="{StaticResource SectionTitleTextStyle}"
                                            Text="Live Status" />
-                            </DockPanel>
 
-                            <StackPanel Grid.Row="1"
-                                        Margin="0,26,0,0">
-                                <TextBlock Margin="0,0,0,6"
-                                           FontSize="13"
-                                           FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextSecondaryBrush}"
-                                           Text="Current state" />
-                                <TextBlock x:Name="CurrentStatusText"
-                                           FontSize="30"
-                                           FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextPrimaryBrush}"
-                                           Text="Not started" />
-                            </StackPanel>
-
-                            <Grid Grid.Row="2"
-                                  Margin="0,30,0,24">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="18" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-
-                                <Border Padding="18"
-                                        Background="{StaticResource SurfaceMutedBrush}"
+                                <Border Grid.Row="1"
+                                        Margin="0,22,0,0"
+                                        Padding="14,11"
+                                        Background="#F2F5FA"
+                                        BorderBrush="{StaticResource BorderSoftBrush}"
+                                        BorderThickness="1"
                                         CornerRadius="16">
-                                    <StackPanel>
-                                        <TextBlock FontSize="13"
-                                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                                   Text="Focused time" />
-                                        <TextBlock x:Name="ElapsedTimeText"
-                                                   Margin="0,8,0,0"
-                                                   FontSize="36"
+                                    <DockPanel>
+                                        <Ellipse x:Name="StatusDot"
+                                                 Width="12"
+                                                 Height="12"
+                                                 Margin="0,0,10,0"
+                                                 Fill="#A6AFBD"
+                                                 DockPanel.Dock="Left" />
+                                        <TextBlock x:Name="CurrentStatusText"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="18"
                                                    FontWeight="SemiBold"
                                                    Foreground="{StaticResource TextPrimaryBrush}"
-                                                   Text="00:00" />
-                                    </StackPanel>
+                                                   Text="Not started" />
+                                    </DockPanel>
                                 </Border>
 
-                                <Border Grid.Column="2"
+                                <Grid Grid.Row="2"
+                                      Margin="0,24,0,24">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="18" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border MinHeight="122"
+                                            Padding="18"
+                                            Background="{StaticResource SurfaceMutedBrush}"
+                                            CornerRadius="18">
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock FontSize="13"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       Text="Focused time" />
+                                            <TextBlock x:Name="ElapsedTimeText"
+                                                       Margin="0,9,0,0"
+                                                       FontSize="34"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                                       Text="00:00" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Grid.Column="2"
+                                            MinHeight="122"
+                                            Padding="18"
+                                            Background="{StaticResource SurfaceMutedBrush}"
+                                            CornerRadius="18">
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock FontSize="13"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       Text="Distractions" />
+                                            <TextBlock x:Name="DistractionCountText"
+                                                       Margin="0,9,0,0"
+                                                       FontSize="34"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                                       Text="0" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <Border Grid.Row="3"
+                                        MinHeight="128"
                                         Padding="18"
-                                        Background="{StaticResource SurfaceMutedBrush}"
-                                        CornerRadius="16">
-                                    <StackPanel>
-                                        <TextBlock FontSize="13"
-                                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                                   Text="Distractions" />
-                                        <TextBlock x:Name="DistractionCountText"
-                                                   Margin="0,8,0,0"
-                                                   FontSize="36"
+                                        Background="#F7F8FC"
+                                        BorderBrush="{StaticResource BorderSoftBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="18">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0"
+                                                   FontSize="13"
                                                    FontWeight="SemiBold"
-                                                   Foreground="{StaticResource TextPrimaryBrush}"
-                                                   Text="0" />
-                                    </StackPanel>
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Text="Latest AI reason" />
+                                        <TextBlock x:Name="LatestReasonText"
+                                                   Grid.Row="1"
+                                                   Margin="0,9,0,0"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Text="Latest reason will appear here."
+                                                   TextWrapping="Wrap" />
+                                    </Grid>
                                 </Border>
                             </Grid>
+                        </Border>
+                    </Grid>
 
-                            <Border Grid.Row="3"
-                                    Padding="18"
-                                    Background="#F7F8FC"
-                                    BorderBrush="{StaticResource BorderSoftBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="16">
-                                <StackPanel>
-                                    <TextBlock FontSize="13"
-                                               FontWeight="SemiBold"
-                                               Foreground="{StaticResource TextSecondaryBrush}"
-                                               Text="Latest AI reason" />
-                                    <TextBlock x:Name="LatestReasonText"
-                                               Margin="0,8,0,0"
-                                               Foreground="{StaticResource TextSecondaryBrush}"
-                                               Text="No AI analysis yet."
-                                               TextWrapping="Wrap" />
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-                    </Border>
+                    <DockPanel Grid.Row="2"
+                               LastChildFill="False"
+                               Margin="0,24,0,0">
+                        <TextBlock VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Text="Data is stored locally on this device." />
+
+                        <Button Width="148"
+                                HorizontalAlignment="Right"
+                                DockPanel.Dock="Right"
+                                Style="{StaticResource PillButtonStyle}"
+                                Click="TestScreenshotButton_Click"
+                                Content="Test Screenshot" />
+                    </DockPanel>
                 </Grid>
-
-                <DockPanel Grid.Row="2"
-                           LastChildFill="False"
-                           Margin="0,24,0,0">
-                    <TextBlock VerticalAlignment="Center"
-                               Foreground="{StaticResource TextMutedBrush}"
-                               Text="Data is stored locally on this device." />
-
-                    <Button Width="140"
-                            HorizontalAlignment="Right"
-                            DockPanel.Dock="Right"
-                            Style="{StaticResource PillButtonStyle}"
-                            Click="TestScreenshotButton_Click"
-                            Content="Test Screenshot" />
-                </DockPanel>
-            </Grid>
-        </Border>
-    </Grid>
+            </Border>
+        </Grid>
+    </ScrollViewer>
 </Window>

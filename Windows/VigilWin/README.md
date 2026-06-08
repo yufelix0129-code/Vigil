@@ -73,8 +73,10 @@ Windows 版支持一个 Dynamic Island 风格的顶部悬浮窗：
 - 这是 WPF 模拟效果，不是 macOS 系统级灵动岛。
 - 专注开始后会在主屏幕顶部居中显示。
 - Compact 模式显示当前状态、专注目标和实时计时。
-- Distracted 时会展开成 Alert，显示目标和 AI 判断原因。
-- Session completed / stopped 时会短暂显示完成状态，然后隐藏。
+- 点击灵动岛可在 Compact 和 Expanded 之间切换，切换使用 WPF 原生宽高、透明度和阴影动画。
+- Expanded / Alert 底部有专注进度条，参考 macOS 原版的 FocusTimelineBar 思路，用于避免展开态出现空白区域。
+- Distracted 时会展开成 Alert，显示目标和 AI 判断原因，并在一段时间后自动收回 Compact。
+- Session completed / stopped 时会短暂显示完成状态，然后自动淡出并关闭窗口。
 - 设置页可以通过 `Enable Dynamic Island` 开启或关闭。
 
 主界面和 Dynamic Island 的计时显示每秒更新；AI 截屏分析仍按设置页里的 `Capture Interval Seconds` 执行，不会因为计时每秒刷新而每秒调用 AI。
