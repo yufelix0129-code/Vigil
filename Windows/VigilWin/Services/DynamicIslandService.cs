@@ -8,6 +8,7 @@ public sealed class DynamicIslandService : IDisposable
 {
     private readonly LogService? _logService;
     private readonly DispatcherTimer _autoHideTimer = new();
+    private readonly List<TimelineSegment> _timelineSegments = [];
     private DynamicIslandWindow? _window;
     private DynamicIslandMode _currentMode = DynamicIslandMode.Hidden;
     private DynamicIslandMode? _scheduledMode;
@@ -46,9 +47,10 @@ public sealed class DynamicIslandService : IDisposable
             _sessionActive = true;
             _isClosing = false;
             _suppressedUntilNextSession = false;
+            ResetTimeline();
             var window = EnsureWindow();
             window.ResetForNewSession();
-            window.ShowSessionStarted(goal, plannedDuration);
+            window.ShowSessionStarted(goal, plannedDuration, GetTimelineSnapshot());
             _currentMode = DynamicIslandMode.Expanded;
             Schedule(DynamicIslandMode.Compact, TimeSpan.FromMilliseconds(1800));
             _logService?.Info("Dynamic Island shown for session start.");
@@ -64,8 +66,9 @@ public sealed class DynamicIslandService : IDisposable
                 return;
             }
 
+            RecordTimelineStatus(status, elapsed);
             var window = EnsureWindow();
-            window.UpdateStatus(status, elapsed, plannedDuration, goal, reason);
+            window.UpdateStatus(status, elapsed, plannedDuration, goal, reason, GetTimelineSnapshot());
 
             if (_currentMode == DynamicIslandMode.Hidden)
             {
@@ -91,9 +94,10 @@ public sealed class DynamicIslandService : IDisposable
 
             _suppressedUntilNextSession = false;
             _isClosing = false;
+            RecordTimelineStatus(FocusStatus.Distracted, elapsed);
             var window = EnsureWindow();
             window.ResetForNewSession();
-            window.ShowDistracted(goal, reason, elapsed, plannedDuration);
+            window.ShowDistracted(goal, reason, elapsed, plannedDuration, GetTimelineSnapshot());
             _currentMode = DynamicIslandMode.Alert;
             Schedule(DynamicIslandMode.Compact, TimeSpan.FromSeconds(10));
             _logService?.Info("Dynamic Island expanded for distracted status.");
@@ -110,9 +114,10 @@ public sealed class DynamicIslandService : IDisposable
             }
 
             EnterTerminalMode();
+            ExtendCurrentTimelineSegment(elapsed);
             var window = EnsureWindow();
             window.ResetForNewSession();
-            window.ShowCompleted(goal, elapsed, plannedDuration, distractionCount);
+            window.ShowCompleted(goal, elapsed, plannedDuration, distractionCount, GetTimelineSnapshot());
             _currentMode = DynamicIslandMode.Completed;
             Schedule(DynamicIslandMode.Hidden, TimeSpan.FromMilliseconds(2500));
             _logService?.Info("Dynamic Island showed completed state.");
@@ -129,9 +134,10 @@ public sealed class DynamicIslandService : IDisposable
             }
 
             EnterTerminalMode();
+            ExtendCurrentTimelineSegment(elapsed);
             var window = EnsureWindow();
             window.ResetForNewSession();
-            window.ShowStopped(goal, elapsed, plannedDuration, message);
+            window.ShowStopped(goal, elapsed, plannedDuration, message, GetTimelineSnapshot());
             _currentMode = DynamicIslandMode.Completed;
             Schedule(DynamicIslandMode.Hidden, TimeSpan.FromMilliseconds(2500));
             _logService?.Info("Dynamic Island showed stopped state.");
@@ -201,6 +207,75 @@ public sealed class DynamicIslandService : IDisposable
         _sessionActive = false;
         _isClosing = false;
         _suppressedUntilNextSession = false;
+    }
+
+    private void ResetTimeline()
+    {
+        _timelineSegments.Clear();
+        _timelineSegments.Add(new TimelineSegment
+        {
+            Status = FocusStatus.Unknown,
+            Start = TimeSpan.Zero,
+            Duration = TimeSpan.Zero
+        });
+    }
+
+    private void RecordTimelineStatus(FocusStatus status, TimeSpan elapsed)
+    {
+        var safeElapsed = elapsed < TimeSpan.Zero ? TimeSpan.Zero : elapsed;
+        if (_timelineSegments.Count == 0)
+        {
+            _timelineSegments.Add(new TimelineSegment
+            {
+                Status = status,
+                Start = TimeSpan.Zero,
+                Duration = safeElapsed
+            });
+            return;
+        }
+
+        var current = _timelineSegments[^1];
+        if (current.Status == status)
+        {
+            current.Duration = Max(TimeSpan.Zero, safeElapsed - current.Start);
+            return;
+        }
+
+        current.Duration = Max(TimeSpan.Zero, safeElapsed - current.Start);
+        _timelineSegments.Add(new TimelineSegment
+        {
+            Status = status,
+            Start = safeElapsed,
+            Duration = TimeSpan.Zero
+        });
+    }
+
+    private void ExtendCurrentTimelineSegment(TimeSpan elapsed)
+    {
+        if (_timelineSegments.Count == 0)
+        {
+            return;
+        }
+
+        var current = _timelineSegments[^1];
+        current.Duration = Max(TimeSpan.Zero, elapsed - current.Start);
+    }
+
+    private IReadOnlyList<TimelineSegment> GetTimelineSnapshot()
+    {
+        return _timelineSegments
+            .Select(segment => new TimelineSegment
+            {
+                Status = segment.Status,
+                Start = segment.Start,
+                Duration = segment.Duration
+            })
+            .ToList();
+    }
+
+    private static TimeSpan Max(TimeSpan first, TimeSpan second)
+    {
+        return first >= second ? first : second;
     }
 
     private void Schedule(DynamicIslandMode mode, TimeSpan delay)
