@@ -96,7 +96,6 @@ public sealed class DynamicIslandService : IDisposable
             _isClosing = false;
             RecordTimelineStatus(FocusStatus.Distracted, elapsed);
             var window = EnsureWindow();
-            window.ResetForNewSession();
             window.ShowDistracted(goal, reason, elapsed, plannedDuration, GetTimelineSnapshot());
             _currentMode = DynamicIslandMode.Alert;
             Schedule(DynamicIslandMode.Compact, TimeSpan.FromSeconds(10));
@@ -116,7 +115,6 @@ public sealed class DynamicIslandService : IDisposable
             EnterTerminalMode();
             ExtendCurrentTimelineSegment(elapsed);
             var window = EnsureWindow();
-            window.ResetForNewSession();
             window.ShowCompleted(goal, elapsed, plannedDuration, distractionCount, GetTimelineSnapshot());
             _currentMode = DynamicIslandMode.Completed;
             Schedule(DynamicIslandMode.Hidden, TimeSpan.FromMilliseconds(2500));
@@ -136,7 +134,6 @@ public sealed class DynamicIslandService : IDisposable
             EnterTerminalMode();
             ExtendCurrentTimelineSegment(elapsed);
             var window = EnsureWindow();
-            window.ResetForNewSession();
             window.ShowStopped(goal, elapsed, plannedDuration, message, GetTimelineSnapshot());
             _currentMode = DynamicIslandMode.Completed;
             Schedule(DynamicIslandMode.Hidden, TimeSpan.FromMilliseconds(2500));

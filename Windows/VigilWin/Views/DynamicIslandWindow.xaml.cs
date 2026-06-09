@@ -12,7 +12,7 @@ namespace VigilWin.Views;
 public partial class DynamicIslandWindow : Window
 {
     private const double CompactWidth = 360;
-    private const double CompactHeight = 84;
+    private const double CompactHeight = 78;
     private const double ExpandedWidth = 580;
     private const double ExpandedHeight = 224;
     private const double CompletedWidth = 540;
@@ -26,7 +26,6 @@ public partial class DynamicIslandWindow : Window
     private bool _isClosing;
     private string _goal = string.Empty;
     private TimeSpan _plannedDuration = TimeSpan.Zero;
-    private DateTime _titlePinnedUntil = DateTime.MinValue;
 
     public DynamicIslandWindow()
     {
@@ -56,9 +55,8 @@ public partial class DynamicIslandWindow : Window
         _goal = goal;
         _plannedDuration = plannedDuration;
         ActionButtonsPanel.Visibility = Visibility.Visible;
-        UpdateContent(FocusStatus.Unknown, TimeSpan.Zero, goal, plannedDuration, "Focus session is ready.", timeline);
-        ExpandedTitleText.Text = "Focus session started";
-        _titlePinnedUntil = DateTime.Now.AddSeconds(2);
+        UpdateContent(FocusStatus.Unknown, TimeSpan.Zero, goal, plannedDuration, "Waiting for first analysis...", timeline);
+        ExpandedTitleText.Text = goal;
         TransitionTo(DynamicIslandMode.Expanded, force: true);
     }
 
@@ -93,7 +91,6 @@ public partial class DynamicIslandWindow : Window
         ActionButtonsPanel.Visibility = Visibility.Visible;
         UpdateContent(FocusStatus.Distracted, elapsed, goal, plannedDuration, reason, timeline);
         ExpandedTitleText.Text = "You may be off track";
-        _titlePinnedUntil = DateTime.MaxValue;
         TransitionTo(DynamicIslandMode.Alert, force: true);
     }
 
@@ -116,7 +113,6 @@ public partial class DynamicIslandWindow : Window
             timeline,
             forceCompleteProgress: true);
         ExpandedTitleText.Text = "Session completed";
-        _titlePinnedUntil = DateTime.MaxValue;
         TransitionTo(DynamicIslandMode.Completed, force: true);
     }
 
@@ -132,7 +128,6 @@ public partial class DynamicIslandWindow : Window
         ActionButtonsPanel.Visibility = Visibility.Collapsed;
         UpdateContent(FocusStatus.Unknown, elapsed, goal, plannedDuration, message, timeline);
         ExpandedTitleText.Text = "Session stopped";
-        _titlePinnedUntil = DateTime.MaxValue;
         TransitionTo(DynamicIslandMode.Completed, force: true);
     }
 
@@ -156,12 +151,17 @@ public partial class DynamicIslandWindow : Window
 
         var target = GetLayout(mode);
         var wasVisible = IsVisible;
+        var previousMode = _mode;
         var oldContent = GetContentForMode(_mode);
         var newContent = GetContentForMode(mode);
 
         StopPropertyAnimations();
         _mode = mode;
         IslandRoot.CornerRadius = new CornerRadius(target.CornerRadius);
+        if (mode == DynamicIslandMode.Compact && previousMode is not DynamicIslandMode.Completed)
+        {
+            ExpandedTitleText.Text = _goal;
+        }
 
         if (!wasVisible)
         {
@@ -172,7 +172,7 @@ public partial class DynamicIslandWindow : Window
             IslandScale.ScaleX = 0.98;
             IslandScale.ScaleY = 0.98;
             IslandTranslate.Y = -6;
-            PositionAtTopCenter(target.Width);
+            PositionAtTopCenter(target.Width, mode);
             Show();
             AnimateShowIn(target);
             return;
@@ -195,13 +195,16 @@ public partial class DynamicIslandWindow : Window
         if (oldContent != newContent)
         {
             AnimateOpacity(oldContent, 0, TimeSpan.FromMilliseconds(80), TimeSpan.Zero);
-            AnimateOpacity(newContent, 1, TimeSpan.FromMilliseconds(130), TimeSpan.FromMilliseconds(150));
+            AnimateOpacity(newContent, 1, TimeSpan.FromMilliseconds(150), TimeSpan.FromMilliseconds(90));
         }
 
+        var centerX = Left + Width / 2;
+        var targetLeft = centerX - target.Width / 2;
+        var targetTop = GetTargetTop(previousMode, mode);
         var sizeEase = CreateTransitionEase(mode);
-        AnimateDouble(this, WidthProperty, Width, target.Width, duration, TimeSpan.FromMilliseconds(40), sizeEase);
-        AnimateDouble(this, HeightProperty, Height, target.Height, duration, TimeSpan.FromMilliseconds(40), sizeEase);
-        AnimateDouble(this, LeftProperty, Left, GetCenteredLeft(target.Width), duration, TimeSpan.FromMilliseconds(40), sizeEase);
+        AnimateDouble(this, WidthProperty, Width, target.Width, duration, TimeSpan.Zero, sizeEase);
+        AnimateDouble(this, LeftProperty, Left, targetLeft, duration, TimeSpan.Zero, sizeEase);
+        AnimateDouble(this, TopProperty, Top, targetTop, duration, TimeSpan.Zero, sizeEase);
         AnimateDouble(IslandShadow, System.Windows.Media.Effects.DropShadowEffect.BlurRadiusProperty, IslandShadow.BlurRadius, target.ShadowBlur, duration, TimeSpan.Zero, CreateEase(EasingMode.EaseOut));
         AnimateDouble(IslandShadow, System.Windows.Media.Effects.DropShadowEffect.OpacityProperty, IslandShadow.Opacity, target.ShadowOpacity, duration, TimeSpan.Zero, CreateEase(EasingMode.EaseOut));
         AnimateDouble(IslandScale, ScaleTransform.ScaleXProperty, IslandScale.ScaleX, target.Scale, duration, TimeSpan.Zero, CreateEase(EasingMode.EaseOut));
@@ -209,14 +212,15 @@ public partial class DynamicIslandWindow : Window
 
         var completion = new DoubleAnimation(Height, target.Height, duration)
         {
-            BeginTime = TimeSpan.FromMilliseconds(40),
+            BeginTime = TimeSpan.Zero,
             EasingFunction = sizeEase
         };
         completion.Completed += (_, _) =>
         {
             Width = target.Width;
             Height = target.Height;
-            Left = GetCenteredLeft(target.Width);
+            Left = targetLeft;
+            Top = targetTop;
             SetContentVisibility(mode);
             IslandScale.ScaleX = target.Scale;
             IslandScale.ScaleY = target.Scale;
@@ -246,8 +250,8 @@ public partial class DynamicIslandWindow : Window
 
         _isAnimating = true;
         var duration = TimeSpan.FromMilliseconds(220);
-        AnimateDouble(IslandScale, ScaleTransform.ScaleXProperty, IslandScale.ScaleX, 0.97, duration, TimeSpan.Zero, CreateEase(EasingMode.EaseIn));
-        AnimateDouble(IslandScale, ScaleTransform.ScaleYProperty, IslandScale.ScaleY, 0.97, duration, TimeSpan.Zero, CreateEase(EasingMode.EaseIn));
+        AnimateDouble(IslandScale, ScaleTransform.ScaleXProperty, IslandScale.ScaleX, 0.985, duration, TimeSpan.Zero, CreateEase(EasingMode.EaseIn));
+        AnimateDouble(IslandScale, ScaleTransform.ScaleYProperty, IslandScale.ScaleY, 0.985, duration, TimeSpan.Zero, CreateEase(EasingMode.EaseIn));
         AnimateDouble(IslandTranslate, TranslateTransform.YProperty, IslandTranslate.Y, -8, duration, TimeSpan.Zero, CreateEase(EasingMode.EaseIn));
         AnimateDouble(IslandShadow, System.Windows.Media.Effects.DropShadowEffect.OpacityProperty, IslandShadow.Opacity, 0.08, duration, TimeSpan.Zero, CreateEase(EasingMode.EaseIn));
 
@@ -267,8 +271,8 @@ public partial class DynamicIslandWindow : Window
     {
         _isAnimating = true;
         AnimateDouble(this, OpacityProperty, 0, 1, TimeSpan.FromMilliseconds(180), TimeSpan.Zero, CreateEase(EasingMode.EaseOut));
-        AnimateDouble(IslandScale, ScaleTransform.ScaleXProperty, 0.98, target.Scale, TimeSpan.FromMilliseconds(220), TimeSpan.Zero, CreateEase(EasingMode.EaseOut));
-        AnimateDouble(IslandScale, ScaleTransform.ScaleYProperty, 0.98, target.Scale, TimeSpan.FromMilliseconds(220), TimeSpan.Zero, CreateEase(EasingMode.EaseOut));
+        AnimateDouble(IslandScale, ScaleTransform.ScaleXProperty, 0.985, target.Scale, TimeSpan.FromMilliseconds(220), TimeSpan.Zero, CreateEase(EasingMode.EaseOut));
+        AnimateDouble(IslandScale, ScaleTransform.ScaleYProperty, 0.985, target.Scale, TimeSpan.FromMilliseconds(220), TimeSpan.Zero, CreateEase(EasingMode.EaseOut));
         AnimateDouble(IslandTranslate, TranslateTransform.YProperty, -6, 0, TimeSpan.FromMilliseconds(220), TimeSpan.Zero, CreateEase(EasingMode.EaseOut));
         AnimateDouble(IslandShadow, System.Windows.Media.Effects.DropShadowEffect.BlurRadiusProperty, IslandShadow.BlurRadius, target.ShadowBlur, TimeSpan.FromMilliseconds(220), TimeSpan.Zero, CreateEase(EasingMode.EaseOut));
         AnimateDouble(IslandShadow, System.Windows.Media.Effects.DropShadowEffect.OpacityProperty, IslandShadow.Opacity, target.ShadowOpacity, TimeSpan.FromMilliseconds(220), TimeSpan.Zero, CreateEase(EasingMode.EaseOut));
@@ -310,15 +314,14 @@ public partial class DynamicIslandWindow : Window
         ExpandedGoalText.Text = $"Goal: {goal}";
         CompactElapsedText.Text = elapsedText;
         ExpandedElapsedText.Text = elapsedText;
-        ReasonText.Text = string.IsNullOrWhiteSpace(reason) ? $"Current status: {statusText}" : reason;
+        ReasonText.Text = string.IsNullOrWhiteSpace(reason) ? GetDefaultReason(statusText, status) : reason;
         IslandRoot.BorderBrush = status == FocusStatus.Distracted
             ? new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 104, 87)) { Opacity = 0.48 }
             : (System.Windows.Media.Brush)FindResource("IslandBorderBrush");
 
-        if (_mode is DynamicIslandMode.Hidden or DynamicIslandMode.Compact
-            || (_mode == DynamicIslandMode.Expanded && DateTime.Now >= _titlePinnedUntil))
+        if (_mode is DynamicIslandMode.Hidden or DynamicIslandMode.Compact or DynamicIslandMode.Expanded)
         {
-            ExpandedTitleText.Text = statusText;
+            ExpandedTitleText.Text = goal;
         }
 
         UpdateProgress(elapsed, plannedDuration, timeline, status, forceCompleteProgress);
@@ -354,10 +357,10 @@ public partial class DynamicIslandWindow : Window
             : "Focus timeline warming up";
     }
 
-    private void PositionAtTopCenter(double width)
+    private void PositionAtTopCenter(double width, DynamicIslandMode mode)
     {
         Left = GetCenteredLeft(width);
-        Top = SystemParameters.WorkArea.Top + 20;
+        Top = GetRestingTop(mode);
     }
 
     private double GetCenteredLeft(double width)
@@ -384,6 +387,7 @@ public partial class DynamicIslandWindow : Window
         BeginAnimation(WidthProperty, null);
         BeginAnimation(HeightProperty, null);
         BeginAnimation(LeftProperty, null);
+        BeginAnimation(TopProperty, null);
         BeginAnimation(OpacityProperty, null);
         CompactContent.BeginAnimation(OpacityProperty, null);
         ExpandedContent.BeginAnimation(OpacityProperty, null);
@@ -497,7 +501,7 @@ public partial class DynamicIslandWindow : Window
         {
             DynamicIslandMode.Compact => new IslandLayout(CompactWidth, CompactHeight, 38, 32, 0.30, 1),
             DynamicIslandMode.Completed => new IslandLayout(CompletedWidth, CompletedHeight, 32, 30, 0.28, 1),
-            DynamicIslandMode.Alert => new IslandLayout(ExpandedWidth, ExpandedHeight, 32, 38, 0.38, 1.01),
+            DynamicIslandMode.Alert => new IslandLayout(ExpandedWidth, ExpandedHeight, 32, 38, 0.38, 1),
             _ => new IslandLayout(ExpandedWidth, ExpandedHeight, 32, 34, 0.34, 1)
         };
     }
@@ -525,8 +529,30 @@ public partial class DynamicIslandWindow : Window
             FocusStatus.Wandering => "Wandering",
             FocusStatus.Distracted => "Distracted",
             FocusStatus.Idle => "Idle",
-            _ => "Waiting"
+            _ => "No analysis yet"
         };
+    }
+
+    private static string GetDefaultReason(string statusText, FocusStatus status)
+    {
+        return status == FocusStatus.Unknown
+            ? "Waiting for first analysis..."
+            : $"Current status: {statusText}";
+    }
+
+    private double GetTargetTop(DynamicIslandMode previousMode, DynamicIslandMode targetMode)
+    {
+        if (previousMode == targetMode)
+        {
+            return Top;
+        }
+
+        return GetRestingTop(targetMode);
+    }
+
+    private static double GetRestingTop(DynamicIslandMode mode)
+    {
+        return SystemParameters.WorkArea.Top + (mode == DynamicIslandMode.Compact ? 20 : 17);
     }
 
     private static System.Windows.Media.Brush GetStatusBrush(FocusStatus status)

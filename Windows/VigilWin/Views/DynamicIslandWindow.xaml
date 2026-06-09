@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:VigilWin.Views"
         Width="360"
-        Height="84"
+        Height="78"
         AllowsTransparency="True"
         Background="Transparent"
         FontFamily="Segoe UI, Microsoft YaHei UI"
@@ -14,12 +14,12 @@
         Topmost="True"
         WindowStyle="None">
     <Border x:Name="IslandRoot"
-            Margin="8"
-            Padding="18,12"
+            Margin="7"
+            Padding="18,8"
             Background="{StaticResource IslandBackgroundBrush}"
             BorderBrush="{StaticResource IslandBorderBrush}"
             BorderThickness="1"
-            CornerRadius="42"
+            CornerRadius="39"
             MouseEnter="IslandRoot_MouseEnter"
             MouseLeave="IslandRoot_MouseLeave"
             MouseLeftButtonUp="IslandRoot_MouseLeftButtonUp"
@@ -99,7 +99,7 @@
                 <views:FocusTimelineBar x:Name="CompactTimelineBar"
                                         Grid.Row="1"
                                         Height="2"
-                                        Margin="2,8,2,0"
+                                        Margin="2,5,2,0"
                                         IsMini="True" />
             </Grid>
 
@@ -118,7 +118,7 @@
                     <TextBlock x:Name="ExpandedElapsedText"
                                DockPanel.Dock="Right"
                                Margin="18,0,0,0"
-                               FontSize="22"
+                               FontSize="30"
                                FontWeight="SemiBold"
                                FontFamily="Cascadia Mono, Consolas, Segoe UI"
                                Foreground="White"
@@ -131,10 +131,10 @@
                                  VerticalAlignment="Center"
                                  Fill="#8B93A3" />
                         <TextBlock x:Name="ExpandedTitleText"
-                                   FontSize="17"
+                                   FontSize="21"
                                    FontWeight="SemiBold"
                                    Foreground="{StaticResource IslandTextPrimaryBrush}"
-                                   Text="Focus session started"
+                                   Text="Focus goal"
                                    TextTrimming="CharacterEllipsis" />
                     </StackPanel>
                 </DockPanel>
@@ -154,7 +154,7 @@
                                FontSize="12"
                                Foreground="{StaticResource IslandTextSecondaryBrush}"
                                LineHeight="17"
-                               Text="Current status: Waiting"
+                               Text="Waiting for first analysis..."
                                TextWrapping="Wrap" />
                 </StackPanel>
 
