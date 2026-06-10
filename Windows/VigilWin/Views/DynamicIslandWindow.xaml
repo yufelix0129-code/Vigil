@@ -15,7 +15,7 @@
         WindowStyle="None">
     <Border x:Name="IslandRoot"
             Margin="7"
-            Padding="18,8"
+            Padding="0"
             Background="{StaticResource IslandBackgroundBrush}"
             BorderBrush="{StaticResource IslandBorderBrush}"
             BorderThickness="1"
@@ -51,7 +51,18 @@
                     IsHitTestVisible="False" />
 
             <Grid x:Name="CompactContent"
-                  Opacity="1">
+                  Margin="18,8"
+                  Opacity="1"
+                  RenderTransformOrigin="0.5,0.5">
+                <Grid.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform x:Name="CompactContentScale"
+                                        ScaleX="1"
+                                        ScaleY="1" />
+                        <TranslateTransform x:Name="CompactContentTranslate"
+                                            Y="0" />
+                    </TransformGroup>
+                </Grid.RenderTransform>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
@@ -104,8 +115,19 @@
             </Grid>
 
             <Grid x:Name="ExpandedContent"
+                  Margin="30,22,30,20"
                   Opacity="0"
+                  RenderTransformOrigin="0.5,0.5"
                   Visibility="Collapsed">
+                <Grid.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform x:Name="ExpandedContentScale"
+                                        ScaleX="0.985"
+                                        ScaleY="0.985" />
+                        <TranslateTransform x:Name="ExpandedContentTranslate"
+                                            Y="8" />
+                    </TransformGroup>
+                </Grid.RenderTransform>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -113,53 +135,58 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <DockPanel Grid.Row="0"
-                           LastChildFill="True">
+                <Grid Grid.Row="0"
+                      VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Ellipse x:Name="ExpandedStatusDot"
+                             Width="11"
+                             Height="11"
+                             Margin="0,0,11,0"
+                             VerticalAlignment="Center"
+                             Fill="#8B93A3" />
+                    <TextBlock x:Name="ExpandedTitleText"
+                               Grid.Column="1"
+                               VerticalAlignment="Center"
+                               FontSize="25"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource IslandTextPrimaryBrush}"
+                               Text="Focus goal"
+                               TextTrimming="CharacterEllipsis"
+                               TextWrapping="NoWrap" />
                     <TextBlock x:Name="ExpandedElapsedText"
-                               DockPanel.Dock="Right"
+                               Grid.Column="2"
                                Margin="18,0,0,0"
-                               FontSize="30"
+                               VerticalAlignment="Center"
+                               FontSize="34"
                                FontWeight="SemiBold"
                                FontFamily="Cascadia Mono, Consolas, Segoe UI"
                                Foreground="White"
                                Text="00:00" />
-                    <StackPanel Orientation="Horizontal">
-                        <Ellipse x:Name="ExpandedStatusDot"
-                                 Width="11"
-                                 Height="11"
-                                 Margin="0,0,10,0"
-                                 VerticalAlignment="Center"
-                                 Fill="#8B93A3" />
-                        <TextBlock x:Name="ExpandedTitleText"
-                                   FontSize="21"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource IslandTextPrimaryBrush}"
-                                   Text="Focus goal"
-                                   TextTrimming="CharacterEllipsis" />
-                    </StackPanel>
-                </DockPanel>
+                </Grid>
 
-                <StackPanel Grid.Row="1"
-                            Margin="0,14,0,10">
-                    <TextBlock x:Name="ExpandedGoalText"
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               Foreground="{StaticResource IslandTextPrimaryBrush}"
-                               Text="Goal: Focus goal"
-                               TextTrimming="CharacterEllipsis"
-                               TextWrapping="NoWrap" />
-                    <TextBlock x:Name="ReasonText"
-                               Margin="0,7,0,0"
-                               MaxHeight="48"
-                               FontSize="12"
-                               Foreground="{StaticResource IslandTextSecondaryBrush}"
-                               LineHeight="17"
-                               Text="Waiting for first analysis..."
-                               TextWrapping="Wrap" />
-                </StackPanel>
+                <TextBlock x:Name="ReasonText"
+                           Grid.Row="1"
+                           Margin="0,12,0,8"
+                           MaxHeight="48"
+                           VerticalAlignment="Top"
+                           FontSize="12"
+                           Foreground="{StaticResource IslandTextSecondaryBrush}"
+                           LineHeight="18"
+                           Text="Waiting for first analysis..."
+                           TextWrapping="Wrap" />
 
-                <Grid Grid.Row="2"
-                      Margin="0,0,0,12">
+                <Grid x:Name="ExpandedTimelinePanel"
+                      Grid.Row="2"
+                      Margin="0,0,0,8"
+                      RenderTransformOrigin="0.5,0.5">
+                    <Grid.RenderTransform>
+                        <TranslateTransform x:Name="ExpandedTimelineTranslate"
+                                            Y="0" />
+                    </Grid.RenderTransform>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -185,7 +212,12 @@
                 <StackPanel x:Name="ActionButtonsPanel"
                             Grid.Row="3"
                             HorizontalAlignment="Right"
-                            Orientation="Horizontal">
+                            Orientation="Horizontal"
+                            RenderTransformOrigin="0.5,0.5">
+                    <StackPanel.RenderTransform>
+                        <TranslateTransform x:Name="ActionButtonsTranslate"
+                                            Y="0" />
+                    </StackPanel.RenderTransform>
                     <Button Width="104"
                             Height="32"
                             Margin="0,0,8,0"
